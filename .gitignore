@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.uv/
+uv.lock
+.DS_Store
+.vscode/
+.idea/
+*.log
+data/
+!data/.gitkeep
