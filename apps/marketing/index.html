@@ -3,6 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Canonical origin is nnavnita.com. Pages already 301s github.io here,
+         but redirect before any script runs so theme/localStorage is only
+         ever read/written on a single origin (shared with the other
+         nnavnita.com/* micro-sites). -->
+    <script>
+      if (location.hostname === "nnavnita.github.io") {
+        location.replace(
+          "https://nnavnita.com" +
+            location.pathname +
+            location.search +
+            location.hash
+        );
+      }
+    </script>
     <title>Ruler — visual rule-engine studio</title>
     <meta
       name="description"
@@ -13,7 +27,8 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Ruler — visual rule-engine studio" />
     <meta property="og:description" content="WYSIWYG JDM editor + trace overlay + audit history. Python engine, React library. GoRules Zen under the hood." />
-    <meta property="og:url" content="https://nnavnita.github.io/ruler/" />
+    <meta property="og:url" content="https://nnavnita.com/ruler/" />
+    <link rel="canonical" href="https://nnavnita.com/ruler/" />
     <meta name="twitter:card" content="summary" />
 
     <link rel="preconnect" href="https://rsms.me/" />
