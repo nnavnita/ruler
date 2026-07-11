@@ -60,11 +60,14 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const isDark = useIsDark(theme);
 
+  // jdm-editor's ConfigProvider destructures `{ mode, token, ...antd }` off
+  // the theme prop. `mode` is what drives its own [data-theme=<mode>] CSS
+  // block; passing algorithm alone leaves the graph light no matter what.
   const antTheme = useMemo(
-    () =>
-      isDark
-        ? { algorithm: antdTheme.darkAlgorithm }
-        : { algorithm: antdTheme.defaultAlgorithm },
+    () => ({
+      mode: isDark ? "dark" : "light",
+      algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+    }),
     [isDark],
   );
 
