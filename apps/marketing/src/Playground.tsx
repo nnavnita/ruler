@@ -1,4 +1,8 @@
-import { AiAuthorPanel, DecisionGraphEditor } from "ruler-editor";
+import {
+  AiAuthorPanel,
+  DecisionGraphEditor,
+  JsonSourceEditor,
+} from "ruler-editor";
 import type { EvaluationResponse, JdmContent } from "ruler-editor";
 import { useState } from "react";
 import { evaluateJdm } from "./lib/zen";
@@ -10,12 +14,15 @@ type Status =
   | { kind: "ok"; ms: string }
   | { kind: "err"; message: string };
 
+type ViewMode = "visual" | "source";
+
 export function Playground() {
   const [content, setContent] = useState<JdmContent>(starterGraph);
   const [inputText, setInputText] = useState<string>(starterInput);
   const [trace, setTrace] = useState<EvaluationResponse | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [showAi, setShowAi] = useState(false);
+  const [view, setView] = useState<ViewMode>("visual");
 
   const handleEvaluate = async () => {
     setStatus({ kind: "running" });
@@ -66,6 +73,30 @@ export function Playground() {
         </div>
         <div className="flex items-center gap-2">
           <StatusPill status={status} />
+          <div className="flex overflow-hidden rounded-md border border-slate-300 text-xs dark:border-slate-700">
+            <button
+              onClick={() => setView("visual")}
+              className={
+                "px-3 py-1.5 " +
+                (view === "visual"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                  : "bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800")
+              }
+            >
+              Visual
+            </button>
+            <button
+              onClick={() => setView("source")}
+              className={
+                "px-3 py-1.5 " +
+                (view === "source"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                  : "bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800")
+              }
+            >
+              Source
+            </button>
+          </div>
           <button
             onClick={() => setShowAi((v) => !v)}
             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -103,11 +134,19 @@ export function Playground() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="h-[520px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <DecisionGraphEditor
-            value={content}
-            onChange={setContent}
-            trace={trace}
-          />
+          {view === "visual" ? (
+            <DecisionGraphEditor
+              value={content}
+              onChange={setContent}
+              trace={trace}
+            />
+          ) : (
+            <JsonSourceEditor
+              value={content}
+              onChange={setContent}
+              className="h-full rounded-none border-0"
+            />
+          )}
         </div>
 
         <aside className="flex flex-col gap-3">

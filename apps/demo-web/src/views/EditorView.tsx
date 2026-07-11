@@ -1,4 +1,8 @@
-import { AiAuthorPanel, DecisionGraphEditor } from "ruler-editor";
+import {
+  AiAuthorPanel,
+  DecisionGraphEditor,
+  JsonSourceEditor,
+} from "ruler-editor";
 import type { EvaluationResponse, JdmContent } from "ruler-editor";
 import { useEffect, useState } from "react";
 import { rulerClient } from "../lib/client";
@@ -9,12 +13,15 @@ const DEFAULT_INPUT = `{
   "tier": "gold"
 }`;
 
+type ViewMode = "visual" | "source";
+
 export function EditorView({ ruleName }: { ruleName: string }) {
   const [content, setContent] = useState<JdmContent>(starterGraph);
   const [inputText, setInputText] = useState(DEFAULT_INPUT);
   const [trace, setTrace] = useState<EvaluationResponse | null>(null);
   const [status, setStatus] = useState<string>("");
   const [showAi, setShowAi] = useState(false);
+  const [view, setView] = useState<ViewMode>("visual");
 
   useEffect(() => {
     void (async () => {
@@ -52,6 +59,14 @@ export function EditorView({ ruleName }: { ruleName: string }) {
     <div className="grid h-full grid-cols-[1fr_380px]">
       <div className="flex flex-col">
         <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-2">
+          <div className="flex overflow-hidden rounded-md border border-slate-300 text-xs">
+            <ModeBtn active={view === "visual"} onClick={() => setView("visual")}>
+              Visual
+            </ModeBtn>
+            <ModeBtn active={view === "source"} onClick={() => setView("source")}>
+              Source
+            </ModeBtn>
+          </div>
           <button
             onClick={handleSave}
             className="rounded bg-slate-900 px-3 py-1 text-sm text-white hover:bg-slate-700"
@@ -73,8 +88,16 @@ export function EditorView({ ruleName }: { ruleName: string }) {
           <span className="ml-auto text-xs text-slate-500">{status}</span>
         </div>
 
-        <div className="flex-1">
-          <DecisionGraphEditor value={content} onChange={setContent} trace={trace} />
+        <div className="flex-1 overflow-hidden">
+          {view === "visual" ? (
+            <DecisionGraphEditor value={content} onChange={setContent} trace={trace} />
+          ) : (
+            <JsonSourceEditor
+              value={content}
+              onChange={setContent}
+              className="h-full"
+            />
+          )}
         </div>
       </div>
 
@@ -109,5 +132,25 @@ export function EditorView({ ruleName }: { ruleName: string }) {
         </pre>
       </aside>
     </div>
+  );
+}
+
+function ModeBtn(props: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={props.onClick}
+      className={
+        "px-3 py-1 transition " +
+        (props.active
+          ? "bg-slate-900 text-white"
+          : "bg-white text-slate-700 hover:bg-slate-100")
+      }
+    >
+      {props.children}
+    </button>
   );
 }

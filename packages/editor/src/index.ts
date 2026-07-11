@@ -1,6 +1,9 @@
 export { DecisionGraphEditor } from "./DecisionGraphEditor";
 export type { DecisionGraphEditorProps } from "./DecisionGraphEditor";
 
+export { JsonSourceEditor } from "./JsonSourceEditor";
+export type { JsonSourceEditorProps } from "./JsonSourceEditor";
+
 export { LogsViewer } from "./LogsViewer";
 export type { LogsViewerProps } from "./LogsViewer";
 
@@ -21,6 +24,8 @@ export {
   loadLlmConfig,
   saveLlmConfig,
   DEFAULT_MODELS,
+  PROVIDER_HOSTS,
+  PROVIDER_LABELS,
 } from "./lib/keyStorage";
 export type { LlmConfig, LlmProvider } from "./lib/keyStorage";
 
