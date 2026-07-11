@@ -53,10 +53,14 @@ export async function authorRule(
     .replace("{{EXISTING}}", existing ? JSON.stringify(existing, null, 2) : "(empty)")
     .replace("{{REQUEST}}", request);
 
-  const raw =
-    config.provider === "anthropic"
-      ? await callAnthropic(config, prompt)
-      : await callOpenAi(config, prompt);
+  let raw: string;
+  if (config.provider === "anthropic") {
+    raw = await callAnthropic(config, prompt);
+  } else if (config.provider === "openrouter") {
+    raw = await callOpenRouter(config, prompt);
+  } else {
+    raw = await callOpenAi(config, prompt);
+  }
 
   const json = extractJson(raw);
   const content = JSON.parse(json) as JdmContent;
@@ -117,6 +121,40 @@ async function callOpenAi(config: LlmConfig, prompt: string): Promise<string> {
   };
   const text = body.choices?.[0]?.message?.content ?? "";
   if (!text) throw new Error("OpenAI returned empty content");
+  return text;
+}
+
+async function callOpenRouter(config: LlmConfig, prompt: string): Promise<string> {
+  // OpenRouter mirrors the OpenAI chat-completions shape, but recommends
+  // HTTP-Referer + X-Title headers so free-tier usage can be attributed.
+  const referer =
+    typeof window !== "undefined" ? window.location.origin : "https://ruler.dev";
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+      "HTTP-Referer": referer,
+      "X-Title": "Ruler",
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`OpenRouter ${response.status}: ${text || response.statusText}`);
+  }
+  const body = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+    error?: { message?: string };
+  };
+  if (body.error?.message) throw new Error(`OpenRouter: ${body.error.message}`);
+  const text = body.choices?.[0]?.message?.content ?? "";
+  if (!text) throw new Error("OpenRouter returned empty content");
   return text;
 }
 

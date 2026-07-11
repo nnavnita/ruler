@@ -6,7 +6,7 @@
  * `clearLlmConfig()`.
  */
 
-export type LlmProvider = "anthropic" | "openai";
+export type LlmProvider = "anthropic" | "openai" | "openrouter";
 
 export interface LlmConfig {
   provider: LlmProvider;
@@ -19,6 +19,19 @@ const KEY = "ruler.llm.config.v1";
 export const DEFAULT_MODELS: Record<LlmProvider, string> = {
   anthropic: "claude-sonnet-4-6",
   openai: "gpt-4o-mini",
+  openrouter: "meta-llama/llama-3.3-70b-instruct:free",
+};
+
+export const PROVIDER_HOSTS: Record<LlmProvider, string> = {
+  anthropic: "api.anthropic.com",
+  openai: "api.openai.com",
+  openrouter: "openrouter.ai",
+};
+
+export const PROVIDER_LABELS: Record<LlmProvider, string> = {
+  anthropic: "Anthropic (Claude)",
+  openai: "OpenAI (GPT)",
+  openrouter: "OpenRouter (free + paid)",
 };
 
 export function loadLlmConfig(): LlmConfig | null {

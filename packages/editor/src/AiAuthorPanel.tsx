@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { JdmContent } from "./types";
 import {
   DEFAULT_MODELS,
+  PROVIDER_HOSTS,
+  PROVIDER_LABELS,
   clearLlmConfig,
   loadLlmConfig,
   saveLlmConfig,
@@ -17,6 +19,8 @@ export interface AiAuthorPanelProps {
   onApply: (next: JdmContent) => void;
   className?: string;
 }
+
+const PROVIDERS: LlmProvider[] = ["anthropic", "openai", "openrouter"];
 
 /**
  * BYO-key rule-authoring panel. The user's API key stays in localStorage
@@ -64,52 +68,62 @@ export function AiAuthorPanel(props: AiAuthorPanelProps) {
   };
 
   return (
-    <div className={className}>
-      <div className="mb-2 flex items-center justify-between">
-        <div className="text-sm font-semibold">Author with AI</div>
-        <div className="flex items-center gap-2">
+    <div
+      className={
+        "rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm " +
+        (className ?? "")
+      }
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-slate-900">Author with AI</div>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Your API key stays in this browser. Requests go direct to the provider — Ruler&rsquo;s backend never sees it.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           {config ? (
-            <span className="text-xs text-slate-500">
-              {config.provider} · {config.model}
+            <span
+              className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800"
+              title={`${config.provider} · ${config.model}`}
+            >
+              {config.provider}
             </span>
           ) : (
-            <span className="text-xs text-amber-700">No key configured</span>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+              No key
+            </span>
           )}
           <button
             onClick={() => setShowConfig(true)}
-            className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-100"
+            className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
             Config
           </button>
         </div>
       </div>
 
-      <p className="mb-2 text-xs text-slate-500">
-        Your API key stays in this browser. Requests go straight to the provider —
-        Ruler&rsquo;s backend never sees the key.
-      </p>
-
       <textarea
         value={request}
         onChange={(e) => setRequest(e.target.value)}
-        rows={4}
+        rows={3}
         spellCheck={false}
-        className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm"
         placeholder="Describe the rule you want…"
+        className="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
       />
 
       <div className="mt-2 flex items-center gap-2">
         <button
           onClick={generate}
           disabled={pending || !request.trim()}
-          className="rounded bg-amber-400 px-3 py-1 text-sm font-medium text-amber-950 hover:bg-amber-300 disabled:opacity-50"
+          className="rounded-md bg-amber-400 px-3 py-1.5 text-sm font-medium text-amber-950 hover:bg-amber-300 disabled:opacity-50"
         >
           {pending ? "Generating…" : "Generate"}
         </button>
         {preview && (
           <button
             onClick={apply}
-            className="rounded bg-slate-900 px-3 py-1 text-sm font-medium text-white hover:bg-slate-700"
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
           >
             Apply to editor
           </button>
@@ -117,14 +131,14 @@ export function AiAuthorPanel(props: AiAuthorPanelProps) {
       </div>
 
       {error && (
-        <div className="mt-2 rounded bg-red-50 px-3 py-2 text-xs text-red-800">
+        <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-800">
           {error}
         </div>
       )}
 
       {preview && (
         <div className="mt-3">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Preview ({preview.content.nodes ? (preview.content.nodes as unknown[]).length : "?"} nodes)
           </div>
           <pre className="max-h-80 overflow-auto rounded-lg bg-slate-950 p-3 font-mono text-xs text-slate-100">
@@ -159,86 +173,164 @@ function ConfigModal(props: {
   onSave: (config: LlmConfig) => void;
   onClear: () => void;
 }) {
-  const [provider, setProvider] = useState<LlmProvider>(props.initial?.provider ?? "anthropic");
+  const [provider, setProvider] = useState<LlmProvider>(
+    props.initial?.provider ?? "anthropic",
+  );
   const [apiKey, setApiKey] = useState(props.initial?.apiKey ?? "");
   const [model, setModel] = useState(
     props.initial?.model ?? DEFAULT_MODELS[props.initial?.provider ?? "anthropic"],
   );
+  const [reveal, setReveal] = useState(false);
+
+  const placeholder =
+    provider === "anthropic"
+      ? "sk-ant-…"
+      : provider === "openrouter"
+      ? "sk-or-…"
+      : "sk-…";
+
+  const helpUrl =
+    provider === "anthropic"
+      ? "https://console.anthropic.com/settings/keys"
+      : provider === "openrouter"
+      ? "https://openrouter.ai/keys"
+      : "https://platform.openai.com/api-keys";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm"
       onClick={props.onClose}
     >
       <div
-        className="w-96 rounded-xl bg-white p-5 shadow-xl"
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 text-lg font-semibold">LLM config</div>
-
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Provider
-          <select
-            value={provider}
-            onChange={(e) => {
-              const p = e.target.value as LlmProvider;
-              setProvider(p);
-              setModel(DEFAULT_MODELS[p]);
-            }}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
-          >
-            <option value="anthropic">Anthropic (Claude)</option>
-            <option value="openai">OpenAI (GPT)</option>
-          </select>
-        </label>
-
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Model
-          <input
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
-          />
-        </label>
-
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-          API key
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder={provider === "anthropic" ? "sk-ant-…" : "sk-…"}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
-          />
-        </label>
-
-        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-          Stored in <code>localStorage</code>. Never uploaded, never proxied.
-          Requests go directly to <code>{provider === "anthropic" ? "api.anthropic.com" : "api.openai.com"}</code>.
-        </p>
-
-        <div className="mt-4 flex items-center gap-2">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+          <div className="text-base font-semibold text-slate-900">LLM config</div>
           <button
-            onClick={() => apiKey && props.onSave({ provider, apiKey, model })}
-            disabled={!apiKey}
-            className="rounded bg-slate-900 px-3 py-1 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+            onClick={props.onClose}
+            aria-label="Close"
+            className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
           >
-            Save
+            ✕
           </button>
+        </div>
+
+        <div className="space-y-4 px-5 py-4">
+          <Field label="Provider">
+            <select
+              value={provider}
+              onChange={(e) => {
+                const p = e.target.value as LlmProvider;
+                setProvider(p);
+                setModel(DEFAULT_MODELS[p]);
+              }}
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            >
+              {PROVIDERS.map((p) => (
+                <option key={p} value={p}>
+                  {PROVIDER_LABELS[p]}
+                </option>
+              ))}
+            </select>
+            {provider === "openrouter" && (
+              <p className="mt-1 text-[11px] text-slate-500">
+                Free-tier models like{" "}
+                <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[10px]">
+                  meta-llama/llama-3.3-70b-instruct:free
+                </code>{" "}
+                work out of the box.
+              </p>
+            )}
+          </Field>
+
+          <Field label="Model">
+            <input
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            />
+          </Field>
+
+          <Field label="API key">
+            <div className="relative">
+              <input
+                type={reveal ? "text" : "password"}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={placeholder}
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 pr-16 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              />
+              <button
+                type="button"
+                onClick={() => setReveal((v) => !v)}
+                className="absolute right-1.5 top-1.5 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+              >
+                {reveal ? "Hide" : "Show"}
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Grab one from{" "}
+              <a
+                href={helpUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-slate-700 underline hover:text-slate-900"
+              >
+                {new URL(helpUrl).host}
+              </a>
+              .
+            </p>
+          </Field>
+
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            Stored in{" "}
+            <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[10px]">
+              localStorage
+            </code>
+            . Never uploaded, never proxied. Requests go direct to{" "}
+            <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[10px]">
+              {PROVIDER_HOSTS[provider]}
+            </code>
+            .
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
           <button
             onClick={props.onClear}
-            className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
           >
             Clear
           </button>
           <button
             onClick={props.onClose}
-            className="ml-auto text-sm text-slate-500 hover:text-slate-800"
+            className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           >
             Cancel
+          </button>
+          <button
+            onClick={() => apiKey && props.onSave({ provider, apiKey, model })}
+            disabled={!apiKey}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Save
           </button>
         </div>
       </div>
     </div>
+  );
+}
+
+function Field(props: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        {props.label}
+      </span>
+      {props.children}
+    </label>
   );
 }

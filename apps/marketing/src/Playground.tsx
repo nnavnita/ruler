@@ -89,7 +89,7 @@ export function Playground() {
       </div>
 
       {showAi && (
-        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="mb-4">
           <AiAuthorPanel
             currentGraph={content}
             onApply={(next) => {
