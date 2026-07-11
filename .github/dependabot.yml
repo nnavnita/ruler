@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # GitHub Actions (workflows themselves).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "ci"]
+
+  # pnpm workspace root — covers all TS packages in the monorepo.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "javascript"]
+    ignore:
+      # Big editor upgrade — bump manually.
+      - dependency-name: "@gorules/jdm-editor"
+        update-types: ["version-update:semver-major"]
+
+  # Python packages.
+  - package-ecosystem: pip
+    directory: "/packages/python-sdk"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "python"]
+
+  - package-ecosystem: pip
+    directory: "/apps/demo-api"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "python"]
+
+  # Go module.
+  - package-ecosystem: gomod
+    directory: "/packages/go-sdk"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "go"]
+
+  # Gradle-based Java SDK.
+  - package-ecosystem: gradle
+    directory: "/packages/java-sdk"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "java"]

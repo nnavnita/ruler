@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --------------------------------------------------------------- #
+  # Python — ruler-python-sdk + demo-api                            #
+  # --------------------------------------------------------------- #
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+      - name: Set up Python
+        run: uv python install 3.11
+      - name: Sync workspace
+        run: uv sync --all-extras
+      - name: Ruff lint (python-sdk)
+        run: uv run --package ruler-python-sdk ruff check packages/python-sdk/src
+      - name: Pytest (python-sdk)
+        run: uv run --package ruler-python-sdk pytest packages/python-sdk/tests -v
+
+  # --------------------------------------------------------------- #
+  # JavaScript / TypeScript — ruler-editor + demo-web + marketing   #
+  # --------------------------------------------------------------- #
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+      - name: Build ruler-editor
+        run: pnpm --filter ruler-editor build
+      - name: Typecheck demo-web
+        run: pnpm --filter demo-web typecheck
+      - name: Build demo-web
+        run: pnpm --filter demo-web build
+      - name: Build marketing
+        run: pnpm --filter marketing build
+      - name: Vitest (ruler-editor)
+        run: pnpm --filter ruler-editor test
+
+  # --------------------------------------------------------------- #
+  # Go — ruler-go-sdk                                                #
+  # --------------------------------------------------------------- #
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: packages/go-sdk/go.sum
+      - name: Vet
+        working-directory: packages/go-sdk
+        run: go vet ./...
+      - name: Test
+        working-directory: packages/go-sdk
+        run: go test -race ./...
+
+  # --------------------------------------------------------------- #
+  # Java — ruler-java-sdk                                            #
+  # --------------------------------------------------------------- #
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Build + test
+        working-directory: packages/java-sdk
+        run: gradle build --no-daemon
