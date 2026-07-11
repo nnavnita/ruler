@@ -1,1 +1,1 @@
-rootProject.name = "ruler-java-client"
+rootProject.name = "ruler-java-sdk"

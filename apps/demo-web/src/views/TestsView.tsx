@@ -1,4 +1,4 @@
-import { TestsPanel } from "@ruler/react-editor";
+import { TestsPanel } from "ruler-editor";
 import { rulerClient } from "../lib/client";
 
 export function TestsView({ ruleName }: { ruleName: string }) {

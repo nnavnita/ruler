@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.ruler"
-version = "0.2.0"
+version = "0.2.1"
 
 java {
     toolchain {
@@ -34,8 +34,8 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
             pom {
-                name.set("Ruler Java Client")
-                description.set("Java HTTP client for the Ruler rule engine service.")
+                name.set("ruler-java-sdk")
+                description.set("Java HTTP SDK for the Ruler rule engine service.")
                 url.set("https://github.com/nnavnita/ruler")
                 licenses {
                     license {

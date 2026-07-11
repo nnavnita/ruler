@@ -1,4 +1,4 @@
-import type { JdmContent } from "@ruler/react-editor";
+import type { JdmContent } from "ruler-editor";
 
 /** Minimal starter graph so a fresh install renders something. */
 export const starterGraph: JdmContent = {

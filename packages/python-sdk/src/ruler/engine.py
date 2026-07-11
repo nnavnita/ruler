@@ -10,8 +10,8 @@ from typing import Any, Iterable
 
 from zen import ZenEngine
 
-from ruler_engine.audit import AuditSink
-from ruler_engine.schemas import (
+from ruler.audit import AuditSink
+from ruler.schemas import (
     AuditRecord,
     RuleRecord,
     RuleStatus,
@@ -19,7 +19,7 @@ from ruler_engine.schemas import (
     RuleTestResult,
     RuleVersion,
 )
-from ruler_engine.storage import (
+from ruler.storage import (
     RuleStorage,
     RuleTestStore,
     RuleVersionStore,

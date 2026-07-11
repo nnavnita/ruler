@@ -1,4 +1,4 @@
-import { createRulerClient } from "@ruler/react-editor";
+import { createRulerClient } from "ruler-editor";
 
 const baseUrl = import.meta.env.VITE_RULER_API_URL ?? "";
 

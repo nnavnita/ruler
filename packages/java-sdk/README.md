@@ -1,6 +1,6 @@
-# ruler java client
+# ruler-java-sdk
 
-HTTP client for the Ruler rule engine service. Java 17+, Jackson for JSON.
+Java 17+ SDK for the Ruler rule engine service. HTTP client using `java.net.http` + Jackson.
 
 ## Install (Gradle, Kotlin DSL)
 
@@ -11,7 +11,7 @@ Not yet published to Maven Central. For now, build locally and include as a proj
 includeBuild("../ruler/packages/java-sdk")
 ```
 
-Once published, expected coords: `io.ruler:client:0.2.0`.
+Once published, expected coords: `io.ruler:ruler-java-sdk:0.2.1`.
 
 ## Use
 

@@ -1,9 +1,9 @@
-# @ruler/react-editor
+# ruler-editor
 
 Drop-in React components for the Ruler rule engine. Wraps `@gorules/jdm-editor` with a trace overlay + audit history + a typed HTTP client.
 
 ```bash
-pnpm add @ruler/react-editor react react-dom
+pnpm add ruler-editor react react-dom
 ```
 
 ```tsx
@@ -11,7 +11,7 @@ import {
   DecisionGraphEditor,
   LogsViewer,
   createRulerClient,
-} from "@ruler/react-editor";
+} from "ruler-editor";
 
 const client = createRulerClient({ baseUrl: "http://localhost:8000" });
 
@@ -28,4 +28,4 @@ function App() {
 }
 ```
 
-Peer deps: `react >= 18`, `react-dom >= 18`. Pairs with `ruler-engine` (Python) or the `demo-api` FastAPI reference server.
+Peer deps: `react >= 18`, `react-dom >= 18`. Pairs with `ruler-python-sdk` (embedded) or the `demo-api` FastAPI reference server (any SDK).

@@ -1,6 +1,6 @@
-# ruler go SDK
+# ruler-go-sdk
 
-Native Go client for the Ruler rule engine service.
+Native Go client for the Ruler rule engine service. Zero external deps.
 
 ```bash
 go get github.com/nnavnita/ruler/packages/go-sdk/ruler

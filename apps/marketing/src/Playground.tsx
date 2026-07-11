@@ -1,5 +1,5 @@
-import { AiAuthorPanel, DecisionGraphEditor } from "@ruler/react-editor";
-import type { EvaluationResponse, JdmContent } from "@ruler/react-editor";
+import { AiAuthorPanel, DecisionGraphEditor } from "ruler-editor";
+import type { EvaluationResponse, JdmContent } from "ruler-editor";
 import { useState } from "react";
 import { evaluateJdm } from "./lib/zen";
 import { starterGraph, starterInput } from "./lib/starterGraph";

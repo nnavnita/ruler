@@ -1,5 +1,5 @@
-import { ReplayPanel, VersionsPanel } from "@ruler/react-editor";
-import type { RuleVersion } from "@ruler/react-editor";
+import { ReplayPanel, VersionsPanel } from "ruler-editor";
+import type { RuleVersion } from "ruler-editor";
 import { useState } from "react";
 import { rulerClient } from "../lib/client";
 

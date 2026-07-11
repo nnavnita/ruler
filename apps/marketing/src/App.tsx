@@ -55,30 +55,30 @@ function Features() {
     {
       pill: "PY",
       pillTone: "amber",
-      name: "ruler-engine",
+      name: "ruler-python-sdk",
       body: "Framework-agnostic Python library wrapping GoRules Zen. Version store, audit sink, and test harness — all pluggable. FastAPI, Flask, Lambda, or a script.",
-      code: "pip install ruler-engine",
+      code: "pip install ruler-python-sdk",
     },
     {
       pill: "TS",
       pillTone: "sky",
-      name: "@ruler/react-editor",
+      name: "ruler-editor",
       body: "React components: editor, trace overlay, versions panel, tests panel, replay panel, audit log. Typed HTTP client included.",
-      code: "pnpm add @ruler/react-editor",
+      code: "pnpm add ruler-editor",
     },
     {
       pill: "GO",
       pillTone: "emerald",
-      name: "go-sdk",
+      name: "ruler-go-sdk",
       body: "Native Go client — mirrors the full Python surface (rules, versions, transitions, replay, tests, audit) over HTTP.",
       code: "go get github.com/nnavnita/ruler/packages/go-sdk/ruler",
     },
     {
       pill: "JVM",
       pillTone: "violet",
-      name: "java-sdk",
+      name: "ruler-java-sdk",
       body: "Java 17+ client using Jackson + java.net.http. Records for models. Same surface as the Go and Python SDKs.",
-      code: "io.ruler:client:0.2.0",
+      code: "io.ruler:ruler-java-sdk:0.2.1",
     },
     {
       pill: "API",
@@ -143,7 +143,7 @@ function PythonSnippet() {
     <section className="mt-16">
       <h2 className="mb-3 text-xl font-semibold tracking-tight">Python, minimal</h2>
       <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-sm text-slate-100 shadow-sm">
-{`from ruler_engine import RuleEngine, InMemoryStorage, InMemoryAuditSink
+{`from ruler import RuleEngine, InMemoryStorage, InMemoryAuditSink
 
 engine = RuleEngine(
     storage=InMemoryStorage(),
@@ -170,7 +170,7 @@ function ReactSnippet() {
   DecisionGraphEditor,
   LogsViewer,
   createRulerClient,
-} from "@ruler/react-editor";
+} from "ruler-editor";
 
 const client = createRulerClient({ baseUrl: "https://api.example.com" });
 
@@ -194,28 +194,28 @@ function Architecture() {
     <section className="mt-16">
       <h2 className="mb-3 text-xl font-semibold tracking-tight">Architecture</h2>
       <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-100 shadow-sm">
-{`┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ React app    │  │ Go service   │  │ Java service │  │ Python app   │
-│ react-editor │  │ go-sdk       │  │ java-sdk     │  │ ruler-engine │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+{`┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
+│ React app    │  │ Go service   │  │ Java service │  │ Python app       │
+│ ruler-editor │  │ ruler-go-sdk │  │ruler-java-sdk│  │ ruler-python-sdk │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────────┘
        │ HTTP + JSON     │ HTTP + JSON     │ HTTP + JSON     │ embed
        ▼                 ▼                 ▼                 ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  FastAPI reference service (demo-api)                               │
-│  rules · versions · transitions · replay · tests · audit            │
-└──────────────────────────────┬──────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│  FastAPI reference service (demo-api)                                   │
+│  rules · versions · transitions · replay · tests · audit                │
+└──────────────────────────────┬──────────────────────────────────────────┘
                                │  uses
                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  ruler-engine                                                       │
-│  · pluggable version store · audit sink · test store                │
-│  · draft → review → publish · replay history · deep-equal tests     │
-└──────────────────────────────┬──────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ruler-python-sdk                                                       │
+│  · pluggable version store · audit sink · test store                    │
+│  · draft → review → publish · replay history · deep-equal tests         │
+└──────────────────────────────┬──────────────────────────────────────────┘
                                │  wraps
                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  GoRules Zen (Rust core)                                            │
-└─────────────────────────────────────────────────────────────────────┘`}
+┌─────────────────────────────────────────────────────────────────────────┐
+│  GoRules Zen (Rust core)                                                │
+└─────────────────────────────────────────────────────────────────────────┘`}
       </pre>
     </section>
   );

@@ -1,7 +1,7 @@
 [project]
-name = "ruler-engine"
-version = "0.2.0"
-description = "Framework-agnostic rule engine wrapping GoRules Zen. Pluggable storage + audit."
+name = "ruler-python-sdk"
+version = "0.2.1"
+description = "Framework-agnostic Python rule engine + SDK. Wraps GoRules Zen; pluggable version store, audit sink, and test store."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -19,7 +19,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ruler_engine"]
+packages = ["src/ruler"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "README.md"]

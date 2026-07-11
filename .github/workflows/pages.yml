@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "apps/marketing/**"
-      - "packages/react-editor/**"
+      - "packages/editor/**"
       - ".github/workflows/pages.yml"
       - "pnpm-workspace.yaml"
       - "package.json"
@@ -32,7 +32,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
-      - run: pnpm --filter @ruler/react-editor build
+      - run: pnpm --filter ruler-editor build
       - run: pnpm --filter marketing build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Protocol
 
-from ruler_engine.schemas import (
+from ruler.schemas import (
     AuditRecord,
     RuleRecord,
     RuleStatus,

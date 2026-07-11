@@ -22,7 +22,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from ruler_engine import (
+from ruler import (
     FileAuditSink,
     FileStorage,
     FileTestStore,

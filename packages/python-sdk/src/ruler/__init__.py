@@ -1,12 +1,12 @@
 """Ruler engine: framework-agnostic rule engine wrapping GoRules Zen."""
 
-from ruler_engine.audit import (
+from ruler.audit import (
     AuditRecord,
     AuditSink,
     FileAuditSink,
     InMemoryAuditSink,
 )
-from ruler_engine.engine import (
+from ruler.engine import (
     EvaluationOutcome,
     InvalidStatusTransitionError,
     ReplayEntry,
@@ -14,14 +14,14 @@ from ruler_engine.engine import (
     RuleNotFoundError,
     VersionNotFoundError,
 )
-from ruler_engine.schemas import (
+from ruler.schemas import (
     RuleRecord,
     RuleStatus,
     RuleTest,
     RuleTestResult,
     RuleVersion,
 )
-from ruler_engine.storage import (
+from ruler.storage import (
     FileStorage,
     FileTestStore,
     FileVersionStore,

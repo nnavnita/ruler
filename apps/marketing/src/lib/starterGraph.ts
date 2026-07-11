@@ -1,4 +1,4 @@
-import type { JdmContent } from "@ruler/react-editor";
+import type { JdmContent } from "ruler-editor";
 
 /**
  * Sample "loyalty discount" rule shown in the playground on first load.

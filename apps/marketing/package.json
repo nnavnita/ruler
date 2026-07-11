@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@gorules/zen-engine-wasm": "^0.23.1",
-    "@ruler/react-editor": "workspace:*",
+    "ruler-editor": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

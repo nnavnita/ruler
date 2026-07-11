@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Protocol
 
-from ruler_engine.schemas import AuditRecord
+from ruler.schemas import AuditRecord
 
 
 class AuditSink(Protocol):

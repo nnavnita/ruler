@@ -1,5 +1,5 @@
-import { LogsViewer } from "@ruler/react-editor";
-import type { AuditRecord } from "@ruler/react-editor";
+import { LogsViewer } from "ruler-editor";
+import type { AuditRecord } from "ruler-editor";
 import { useState } from "react";
 import { rulerClient } from "../lib/client";
 
