@@ -87,7 +87,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v6
       - name: Build + test
         working-directory: packages/java-sdk
         run: gradle build --no-daemon
