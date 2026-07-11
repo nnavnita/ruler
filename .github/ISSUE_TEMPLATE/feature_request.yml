@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a new feature or an improvement.
+title: "[feat] <one-line summary>"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: A specific use case beats an abstract wish list.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Sketch the API / UX. Screenshots or JDM examples welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Anything you tried or thought about that didn't fit.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package this touches
+      multiple: true
+      options:
+        - ruler-python-sdk
+        - ruler-editor (npm)
+        - ruler-go-sdk
+        - ruler-java-sdk
+        - demo-api
+        - demo-web
+        - marketing site / playground

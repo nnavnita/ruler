@@ -1,0 +1,78 @@
+name: Bug report
+description: Something in Ruler doesn't work the way you expect.
+title: "[bug] <one-line summary>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough for us to reproduce.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package is affected?
+      options:
+        - ruler-python-sdk
+        - ruler-editor (npm)
+        - ruler-go-sdk
+        - ruler-java-sdk
+        - demo-api (FastAPI reference)
+        - demo-web (Vite React reference)
+        - marketing site / playground
+        - unsure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: e.g. `ruler-python-sdk 0.2.1`, or the short commit hash from `main`.
+      placeholder: 0.2.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal JDM graph or code snippet is ideal.
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include error output, stack trace, or trace JSON if you have it.
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS + language runtime versions (e.g. macOS 14.5, Python 3.11.9, Node 20.12).
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Sanity checks
+      options:
+        - label: I searched existing issues and this hasn't been reported.
+          required: true
+        - label: I'm on the latest tagged release (or `main`).
+          required: true

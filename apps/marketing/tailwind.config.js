@@ -6,7 +6,9 @@ export default {
     "../../packages/editor/src/**/*.{ts,tsx}",
     "../../packages/editor/dist/**/*.{js,cjs}",
   ],
-  darkMode: "media",
+  // Dark mode disabled: jdm-editor's node chrome plus ant-design tokens
+  // don't co-operate with prefers-color-scheme, so we lock light-mode.
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
