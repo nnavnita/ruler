@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ruler — visual rule-engine studio</title>
+    <meta
+      name="description"
+      content="Ruler is a visual rule-engine studio. WYSIWYG JDM decision-graph editor, live trace overlay, and audit history. Python engine for embedding, React library for building. GoRules Zen under the hood."
+    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ruler — visual rule-engine studio" />
+    <meta property="og:description" content="WYSIWYG JDM editor + trace overlay + audit history. Python engine, React library. GoRules Zen under the hood." />
+    <meta property="og:url" content="https://nnavnita.github.io/ruler/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Ruler — visual rule-engine studio" />
+    <meta name="twitter:description" content="WYSIWYG JDM editor + trace overlay + audit history. Python engine, React library." />
+
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <img src="favicon.svg" alt="" class="mark" />
+        <div class="hero-text">
+          <h1>Ruler</h1>
+          <p>Visual rule-engine studio. Draw JDM decision graphs, evaluate them, watch executed nodes light up, keep an audit trail. GoRules Zen under the hood.</p>
+        </div>
+      </header>
+
+      <div class="ctas">
+        <a class="btn btn-primary" href="https://github.com/nnavnita/ruler">View on GitHub</a>
+        <a class="btn" href="https://github.com/nnavnita/ruler#dev">Run the demo</a>
+      </div>
+
+      <section>
+        <h2>What&rsquo;s in the box</h2>
+        <div class="grid">
+          <div class="card">
+            <h3><span class="pill py">Python</span> <code>ruler-engine</code></h3>
+            <p>Framework-agnostic Python library wrapping GoRules Zen. Pluggable storage and audit sinks. Drop it into FastAPI, Flask, a Lambda, or a script.</p>
+            <pre><code>pip install ruler-engine</code></pre>
+          </div>
+          <div class="card">
+            <h3><span class="pill ts">React</span> <code>@ruler/react-editor</code></h3>
+            <p>React components for the visual editor, live trace overlay, and audit-log table. Typed HTTP client included. Peer deps: React 18+.</p>
+            <pre><code>pnpm add @ruler/react-editor</code></pre>
+          </div>
+          <div class="card">
+            <h3><span class="pill svc">HTTP</span> reference service</h3>
+            <p>FastAPI service that wires the Python engine to a small HTTP surface. Java, Go, and other backends consume it via plain JSON.</p>
+            <pre><code>uvicorn demo_api.main:app</code></pre>
+          </div>
+          <div class="card">
+            <h3><span class="pill web">Web</span> reference client</h3>
+            <p>Vite + React demo app showing the editor, trace overlay, and log viewer wired end-to-end. Fork it, or copy the bits you want.</p>
+            <pre><code>pnpm --filter demo-web dev</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Python, minimal</h2>
+        <pre class="code"><code>from ruler_engine import RuleEngine, InMemoryStorage, InMemoryAuditSink
+
+engine = RuleEngine(
+    storage=InMemoryStorage(),
+    audit=InMemoryAuditSink(),
+)
+
+engine.save_rule("discount", jdm_json_dict)
+
+outcome = engine.evaluate("discount", {"age": 25, "tier": "gold"})
+print(outcome.result)        # -> {"discount": 0.15}
+print(outcome.performance)   # -> "312µs"
+print(outcome.trace)         # -> dict of executed node outputs</code></pre>
+      </section>
+
+      <section>
+        <h2>React, minimal</h2>
+        <pre class="code"><code>import {
+  DecisionGraphEditor,
+  LogsViewer,
+  createRulerClient,
+} from "@ruler/react-editor";
+
+const client = createRulerClient({ baseUrl: "https://api.example.com" });
+
+export function App() {
+  const [content, setContent] = useState(myJdm);
+  const [trace, setTrace] = useState(null);
+  return (
+    &lt;&gt;
+      &lt;DecisionGraphEditor value={content} onChange={setContent} trace={trace} /&gt;
+      &lt;LogsViewer client={client} /&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      </section>
+
+      <section>
+        <h2>Architecture</h2>
+        <pre class="ascii">┌─────────────────────┐    ┌─────────────────────┐
+│  React frontend     │    │  Java / Python /    │
+│  @ruler/react-editor│    │  anything backend   │
+└──────────┬──────────┘    └──────────┬──────────┘
+           │  HTTP + JSON             │  pip install
+           ▼                          ▼  ruler-engine
+┌─────────────────────────────────────────────────┐
+│  FastAPI reference service (demo-api)           │
+│  · rules · evaluate · trace · audit log         │
+└──────────────────────┬──────────────────────────┘
+                       │  embeds
+                       ▼
+┌─────────────────────────────────────────────────┐
+│  ruler-engine  →  GoRules Zen (Rust core)       │
+└─────────────────────────────────────────────────┘</pre>
+      </section>
+
+      <footer>
+        <span>Ruler &middot; MIT &middot; built by <a href="https://nnavnita.com">nnavnita</a></span>
+        <a href="https://github.com/nnavnita/ruler">GitHub</a>
+      </footer>
+    </main>
+  </body>
+</html>
