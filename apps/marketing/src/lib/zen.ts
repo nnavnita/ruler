@@ -273,13 +273,15 @@ function evaluateSwitchNode(
   const statements = node.content?.statements ?? [];
   const hitPolicy = node.content?.hitPolicy ?? "first";
 
+  const isFallback = (s: Statement) =>
+    s.isDefault === true || !s.condition || s.condition.trim() === "";
+
   const winners: Statement[] = [];
   for (const s of statements) {
-    if (s.isDefault) continue;
-    if (!s.condition) continue;
+    if (isFallback(s)) continue;
     let matched = false;
     try {
-      const raw = wasm.evaluateExpression(s.condition, incoming);
+      const raw = wasm.evaluateExpression(s.condition!, incoming);
       matched = raw === true || raw === "true";
     } catch (exc) {
       throw new Error(
@@ -294,12 +296,13 @@ function evaluateSwitchNode(
     }
   }
   if (winners.length === 0) {
-    const def = statements.find((s) => s.isDefault);
+    // Any fallback (explicit isDefault: true OR empty condition) counts.
+    const def = statements.find(isFallback);
     if (def) winners.push(def);
   }
   if (winners.length === 0) {
     throw new Error(
-      `${labelOf(node)}: no matching statement and no default branch.`,
+      `${labelOf(node)}: no matching statement and no default/fallback branch.`,
     );
   }
   return {
