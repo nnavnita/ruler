@@ -244,11 +244,27 @@ function RulerGraphStyles() {
          query, no light-body/light-text clash. */
 
       .ruler-graph .grl-dn--success {
-        --node-background: #1f180a;
+        --node-background: #1f180a !important;
         outline: 3px solid #f59e0b;
         outline-offset: 2px;
         border-radius: 10px;
         box-shadow: 0 0 24px rgba(251, 191, 36, 0.6);
+      }
+      /* Belt-and-braces: paint every plausible body container directly
+         in case jdm-editor's success-bg variable is read from a token
+         we haven't intercepted. */
+      .ruler-graph .grl-dn--success,
+      .ruler-graph .grl-dn--success .grl-dn__graphCard,
+      .ruler-graph .grl-dn--success .grl-dn__body,
+      .ruler-graph .grl-dn--success .grl-dn__cn,
+      .ruler-graph .grl-dn--success .grl-dn__cn__form,
+      .ruler-graph .grl-dn--success .grl-dn__footer,
+      .ruler-graph .grl-dn--success .grl-dn__details,
+      .ruler-graph .grl-dn--success .cm-editor,
+      .ruler-graph .grl-dn--success .cm-editor .cm-scroller,
+      .ruler-graph .grl-dn--success .cm-editor .cm-gutters {
+        background: #1f180a !important;
+        background-color: #1f180a !important;
       }
       /* Force every descendant text to a light peach so nothing stays
          dark on the dark amber body. Skip icons / SVG stroke colours. */
