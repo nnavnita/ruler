@@ -24,9 +24,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background: #0f0f11;
-    color: #ececef;
-  }
+html.dark body {
+  background: #0f0f11;
+  color: #ececef;
 }
