@@ -1,7 +1,10 @@
 import { DecisionGraph, JdmConfigProvider } from "@gorules/jdm-editor";
 import "@gorules/jdm-editor/dist/style.css";
-import { useEffect, useMemo, useRef } from "react";
+import { theme as antdTheme } from "antd";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { EvaluationResponse, JdmContent } from "./types";
+
+export type DecisionGraphTheme = "light" | "dark" | "auto";
 
 export interface DecisionGraphEditorProps {
   /** JDM decision graph content. */
@@ -16,6 +19,12 @@ export interface DecisionGraphEditorProps {
   style?: React.CSSProperties;
   /** Hide the toolbar (useful for read-only views). */
   disabled?: boolean;
+  /**
+   * Theme to render the graph in. `"auto"` follows either the nearest
+   * ancestor with class `dark` on `<html>`, or `prefers-color-scheme`
+   * when nothing has been explicitly picked. Defaults to `"auto"`.
+   */
+  theme?: DecisionGraphTheme;
 }
 
 interface JdmEdgeLite {
@@ -35,21 +44,29 @@ interface SwitchTraceData {
   statements?: { id: string }[];
 }
 
-// Emerald palette. Green reads as "success" without any explanation.
-const HIT_STROKE = "#16a34a"; // emerald-600
+const HIT_STROKE = "#16a34a";
 
 /**
- * Visual JDM editor. Wraps `@gorules/jdm-editor` and layers a bold green
- * "this ran successfully" treatment on hit nodes, edges, and the matched
- * switch statement.
+ * Visual JDM editor. Wraps `@gorules/jdm-editor` and:
  *
- * Deliberately light-mode only — jdm-editor's node chrome doesn't
- * respond well to prefers-color-scheme, and forcing a dark theme on top
- * clashes with the ant-design token palette underneath.
+ * - Respects the app's dark / light theme by passing `theme` through to
+ *   `JdmConfigProvider` (using ant-design's `darkAlgorithm` in dark mode).
+ * - Layers a green "successfully executed" treatment onto hit nodes,
+ *   edges, and the matched switch statement, styled to read on either
+ *   theme.
  */
 export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
-  const { value, onChange, trace, className, style, disabled } = props;
+  const { value, onChange, trace, className, style, disabled, theme = "auto" } = props;
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const isDark = useIsDark(theme);
+
+  const antTheme = useMemo(
+    () =>
+      isDark
+        ? { algorithm: antdTheme.darkAlgorithm }
+        : { algorithm: antdTheme.defaultAlgorithm },
+    [isDark],
+  );
 
   const simulate = useMemo(() => {
     if (!trace) return undefined;
@@ -201,11 +218,12 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
   }, [hitStatementIds, value, trace]);
 
   return (
-    <JdmConfigProvider>
+    <JdmConfigProvider theme={antTheme as never}>
       <RulerGraphStyles />
       {edgeStyleTag}
       <div
         ref={wrapperRef}
+        data-theme={isDark ? "dark" : "light"}
         className={"ruler-graph " + (className ?? "")}
         style={{ height: "100%", ...style }}
       >
@@ -220,6 +238,47 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
   );
 }
 
+function useIsDark(pref: DecisionGraphTheme): boolean {
+  const [dark, setDark] = useState<boolean>(() => resolveDark(pref));
+
+  useEffect(() => {
+    if (pref !== "auto") {
+      setDark(pref === "dark");
+      return;
+    }
+
+    setDark(resolveDark(pref));
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onMediaChange = () => setDark(resolveDark(pref));
+    media.addEventListener("change", onMediaChange);
+
+    const observer = new MutationObserver(() => setDark(resolveDark(pref)));
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    return () => {
+      media.removeEventListener("change", onMediaChange);
+      observer.disconnect();
+    };
+  }, [pref]);
+
+  return dark;
+}
+
+function resolveDark(pref: DecisionGraphTheme): boolean {
+  if (pref === "dark") return true;
+  if (pref === "light") return false;
+  if (typeof document === "undefined") return false;
+  // Explicit choice on <html> wins over prefers-color-scheme.
+  const el = document.documentElement;
+  if (el.classList.contains("dark") || el.dataset.theme === "dark") return true;
+  if (el.classList.contains("light") || el.dataset.theme === "light") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 let stylesInjected = false;
 
 function RulerGraphStyles() {
@@ -229,31 +288,29 @@ function RulerGraphStyles() {
     const el = document.createElement("style");
     el.setAttribute("data-ruler-graph", "");
     el.textContent = `
-      /* Green success emphasis on hit nodes. Keep jdm-editor's own body
-         styling — we only add an outline + glow around the outside so
-         the node stays readable and the "this ran" signal is loud. */
+      /* Green success emphasis on hit nodes — same treatment on both
+         themes, since jdm-editor already recolours the interior
+         appropriately via ant-design's dark algorithm. */
       .ruler-graph .grl-dn--success {
-        outline: 3px solid ${HIT_STROKE};
+        outline: 3px solid #16a34a;
         outline-offset: 2px;
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(34, 197, 94, 0.55);
       }
 
-      /* Matched switch statement row — same green treatment, obvious
-         but not overpowering. */
+      /* Matched switch statement row. */
       .ruler-graph .ruler-hit-statement {
-        outline: 2px solid ${HIT_STROKE} !important;
+        outline: 2px solid #16a34a !important;
         outline-offset: 1px;
         background: rgba(34, 197, 94, 0.18) !important;
         border-radius: 6px;
-        box-shadow: inset 0 0 0 1px ${HIT_STROKE};
+        box-shadow: inset 0 0 0 1px #16a34a;
       }
 
-      /* Hit edge base treatment via the 'animated' class we set on the
-         edge value. Reactflow adds this class when animated=true. */
+      /* Hit edge base treatment via the animated class. */
       .ruler-graph .react-flow__edge.animated .react-flow__edge-path,
       .ruler-graph .react-flow__edge.ruler-hit-edge .react-flow__edge-path {
-        stroke: ${HIT_STROKE} !important;
+        stroke: #16a34a !important;
         stroke-width: 3.5px !important;
         filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.75));
       }
@@ -261,10 +318,10 @@ function RulerGraphStyles() {
       .ruler-graph .react-flow__edge.animated marker path,
       .ruler-graph .react-flow__edge.ruler-hit-edge marker polygon,
       .ruler-graph .react-flow__edge.ruler-hit-edge marker path {
-        fill: ${HIT_STROKE} !important;
-        stroke: ${HIT_STROKE} !important;
+        fill: #16a34a !important;
+        stroke: #16a34a !important;
       }
-    `.replace(/\$\{HIT_STROKE\}/g, HIT_STROKE);
+    `;
     document.head.appendChild(el);
   }, []);
   return null;

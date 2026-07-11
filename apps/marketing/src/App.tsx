@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Playground } from "./Playground";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function App() {
   return (
@@ -19,7 +20,7 @@ function Hero() {
   return (
     <header className="mb-6 flex items-center gap-5">
       <img src="/ruler/favicon.svg" alt="" className="h-14 w-14" />
-      <div>
+      <div className="flex-1">
         <h1 className="text-3xl font-bold tracking-tight">Ruler</h1>
         <p className="mt-1 max-w-2xl text-slate-600 dark:text-slate-400">
           Visual rule-engine studio. Draw JDM decision graphs, evaluate them,
@@ -27,6 +28,7 @@ function Hero() {
           the hood.
         </p>
       </div>
+      <ThemeToggle />
     </header>
   );
 }

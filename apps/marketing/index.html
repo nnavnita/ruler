@@ -18,6 +18,25 @@
 
     <link rel="preconnect" href="https://rsms.me/" />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <!-- Apply saved theme before hydration so we don't flash the wrong one. -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("ruler.theme.v1");
+          var choice = raw === "light" || raw === "dark" ? raw : "system";
+          var effective =
+            choice === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : choice;
+          var el = document.documentElement;
+          el.dataset.theme = effective;
+          if (effective === "dark") el.classList.add("dark");
+          el.style.colorScheme = effective;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

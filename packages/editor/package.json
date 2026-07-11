@@ -30,7 +30,8 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@gorules/jdm-editor": "^1.52.0"
+    "@gorules/jdm-editor": "^1.52.0",
+    "antd": "^5.20.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
