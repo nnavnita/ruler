@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Iterable
+from typing import Any
 
 from zen import ZenEngine
 
@@ -205,11 +205,14 @@ class RuleEngine:
     def _evaluate_content(
         self, content: dict[str, Any], context: dict[str, Any], *, trace: bool
     ) -> tuple[Any, dict[str, Any] | None, str | None, str | None]:
-        """Returns (result, trace, performance, error)."""
+        """Returns (result, trace, performance, error).
+
+        `zen-engine` (Python bindings) expects a Mapping for
+        `create_decision`, not raw bytes / str. Pass the dict straight
+        through.
+        """
         try:
-            decision = self._zen.create_decision(
-                json.dumps(content).encode("utf-8")
-            )
+            decision = self._zen.create_decision(content)
             response = decision.evaluate(context, {"trace": trace})
             if isinstance(response, dict):
                 return (
@@ -389,5 +392,5 @@ def _deep_eq(a: Any, b: Any) -> bool:
             return False
         return all(_deep_eq(a[k], b[k]) for k in a)
     if isinstance(a, list) and isinstance(b, list):
-        return len(a) == len(b) and all(_deep_eq(x, y) for x, y in zip(a, b))
+        return len(a) == len(b) and all(_deep_eq(x, y) for x, y in zip(a, b, strict=True))
     return a == b

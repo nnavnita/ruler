@@ -6,7 +6,6 @@ read like literature-book examples, not real business logic.
 
 from __future__ import annotations
 
-
 # Classifies a fruit into a short label. Single expression node.
 FRUIT_CLASSIFIER: dict = {
     "nodes": [

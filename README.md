@@ -9,7 +9,7 @@
 [![Go 1.22+](https://img.shields.io/badge/go-1.22%2B-00ADD8.svg)](./packages/go-sdk)
 [![Java 17+](https://img.shields.io/badge/java-17%2B-ED8B00.svg)](./packages/java-sdk)
 
-**Ruler is an opinionated BRMS stack around [GoRules Zen](https://github.com/gorules/zen) and [`@gorules/jdm-editor`](https://github.com/gorules/jdm-editor).** It takes the world-class Rust decision engine and visual editor GoRules ships open-source, and wraps them in the ops layer, test harness, replay, audit log, LLM authoring, and multi-language SDKs you would otherwise have to build yourself (or pay for the hosted GoRules BRMS to get).
+**Ruler is an opinionated Business Rules Management System (BRMS) stack around [GoRules Zen](https://github.com/gorules/zen) and [`@gorules/jdm-editor`](https://github.com/gorules/jdm-editor).** It takes the world-class Rust decision engine and visual editor GoRules ships open-source, and wraps them in the ops layer, test harness, replay, audit log, LLM authoring, and multi-language SDKs you would otherwise have to build yourself (or pay for the hosted GoRules BRMS to get).
 
 Try the visual editor + in-browser evaluator: **<https://nnavnita.github.io/ruler/>**.
 

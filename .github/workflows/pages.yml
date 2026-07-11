@@ -1,4 +1,4 @@
-name: Deploy marketing site to GitHub Pages
+name: Pages Deploy
 
 on:
   push:
@@ -49,4 +49,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
