@@ -26,7 +26,21 @@ export function ThemeToggle() {
       if (loadThemeChoice() === "system") applyThemeToDocument("system");
     };
     media.addEventListener("change", onMediaChange);
-    return () => media.removeEventListener("change", onMediaChange);
+
+    // Cross-tab sync: if the user picks a theme on nnavnita.com/ (or
+    // any other /* sub-site) in another tab, propagate here live.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "nnavnita.theme.v1") return;
+      const next = loadThemeChoice();
+      setChoice(next);
+      applyThemeToDocument(next);
+    };
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      media.removeEventListener("change", onMediaChange);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   const pick = (next: ThemeChoice) => {

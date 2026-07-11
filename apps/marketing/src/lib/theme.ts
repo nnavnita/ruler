@@ -13,7 +13,10 @@
 
 export type ThemeChoice = "light" | "dark" | "system";
 
-const KEY = "ruler.theme.v1";
+// Shared across all nnavnita.com/* micro-sites. Same origin ->
+// localStorage propagates, so a pick on the main landing carries into
+// /ruler, /kerby, /kural, /gambit, etc.
+const KEY = "nnavnita.theme.v1";
 
 export function loadThemeChoice(): ThemeChoice {
   if (typeof window === "undefined") return "system";
