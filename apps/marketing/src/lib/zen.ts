@@ -98,6 +98,7 @@ interface TraceEntry {
   input: unknown;
   output: unknown;
   performance: string;
+  order: number;
   traceData?: unknown;
 }
 
@@ -129,6 +130,7 @@ export async function evaluateJdm(
   const trace: Record<string, TraceEntry> = {};
   const results = new Map<string, unknown>();
   const visited = new Set<string>();
+  let orderCounter = 0;
 
   const startTotal = performance.now();
 
@@ -161,7 +163,12 @@ export async function evaluateJdm(
         break;
 
       case "expressionNode": {
-        output = evaluateExpressionNode(node, incoming, wasm);
+        const evaluated = evaluateExpressionNode(node, incoming, wasm);
+        output = evaluated.output;
+        // Shape matches SimulationTraceDataExpression from jdm-editor —
+        // { [key]: { result } } so the editor highlights the expression
+        // rows that fired.
+        traceData = evaluated.perKey;
         break;
       }
 
@@ -173,7 +180,10 @@ export async function evaluateJdm(
           nodeId,
           edgesFrom,
         );
-        traceData = { taken: winners.map((w) => w.id) };
+        // Shape matches SimulationTraceDataSwitch — { statements: [{id}] }
+        // — jdm-editor uses this to glow the matched statement and its
+        // outgoing edge in the decision graph.
+        traceData = { statements: winners.map((w) => ({ id: w.id })) };
         output = incoming;
         nextEdges = followEdges;
         break;
@@ -182,7 +192,12 @@ export async function evaluateJdm(
       case "decisionTableNode": {
         const outcome = evaluateDecisionTable(node, incoming, wasm);
         output = outcome.output;
-        traceData = { hitRuleIds: outcome.hitRuleIds };
+        // Shape matches SimulationTraceDataTable — single object or array
+        // of { index, reference_map, rule } depending on hitPolicy.
+        traceData =
+          outcome.hitPolicy === "collect"
+            ? outcome.matchedRows
+            : outcome.matchedRows[0] ?? null;
         break;
       }
 
@@ -209,6 +224,7 @@ export async function evaluateJdm(
       input: incoming,
       output,
       performance: `${nodeMs.toFixed(2)}ms`,
+      order: orderCounter++,
       traceData,
     };
     results.set(node.id, output);
@@ -241,17 +257,20 @@ function evaluateExpressionNode(
   node: JdmNode,
   incoming: Record<string, unknown>,
   wasm: WasmModule,
-): Record<string, unknown> {
+): { output: Record<string, unknown>; perKey: Record<string, { result: unknown }> } {
   const expressions = node.content?.expressions ?? [];
   const next: Record<string, unknown> = {};
+  const perKey: Record<string, { result: unknown }> = {};
   for (const expr of expressions) {
     if (!expr.key) continue;
     try {
-      next[expr.key] = evalExpressionSafe(
+      const val = evalExpressionSafe(
         wasm.evaluateExpression,
         expr.value,
         incoming,
       );
+      next[expr.key] = val;
+      perKey[expr.key] = { result: val };
     } catch (exc) {
       throw new Error(
         `${labelOf(node)}: expression \`${expr.value}\` failed — ${
@@ -260,7 +279,7 @@ function evaluateExpressionNode(
       );
     }
   }
-  return next;
+  return { output: next, perKey };
 }
 
 function evaluateSwitchNode(
@@ -311,32 +330,46 @@ function evaluateSwitchNode(
   };
 }
 
+interface DecisionTableMatch {
+  index: number;
+  reference_map: Record<string, unknown>;
+  rule: Record<string, string>;
+}
+
 function evaluateDecisionTable(
   node: JdmNode,
   incoming: Record<string, unknown>,
   wasm: WasmModule,
-): { output: unknown; hitRuleIds: string[] } {
+): {
+  output: unknown;
+  hitPolicy: "first" | "collect";
+  matchedRows: DecisionTableMatch[];
+} {
   const inputs = node.content?.inputs ?? [];
   const outputs = node.content?.outputs ?? [];
   const rules = node.content?.rules ?? [];
   const hitPolicy = node.content?.hitPolicy ?? "first";
 
-  const hitRuleIds: string[] = [];
+  const matchedRows: DecisionTableMatch[] = [];
   const collected: Record<string, unknown>[] = [];
 
   const baseVar = new wasm.Variable(incoming);
 
-  for (const rule of rules) {
+  for (let ri = 0; ri < rules.length; ri++) {
+    const rule = rules[ri];
+    const referenceMap: Record<string, unknown> = {};
+
     const cellsMatch = inputs.every((col) => {
       const cell = String((rule[col.id] as unknown) ?? "").trim();
+      const value = col.field ? readField(incoming, col.field) : undefined;
+      if (col.field) referenceMap[col.field] = value;
       if (cell === "") return true;
       if (!col.field) return true;
-      const value = readField(incoming, col.field);
       try {
         return baseVar.cloneWith("$", value).evaluateUnaryExpression(cell);
       } catch (exc) {
         throw new Error(
-          `${labelOf(node)}: rule ${rule._id ?? "?"} column ${col.name ?? col.field} check \`${cell}\` failed — ${
+          `${labelOf(node)}: rule ${rule._id ?? ri} column ${col.name ?? col.field} check \`${cell}\` failed — ${
             exc instanceof Error ? exc.message : String(exc)
           }`,
         );
@@ -346,8 +379,14 @@ function evaluateDecisionTable(
     if (!cellsMatch) continue;
 
     const rowOutput: Record<string, unknown> = {};
+    const ruleRaw: Record<string, string> = {};
+
+    for (const col of inputs) {
+      ruleRaw[col.id] = String((rule[col.id] as unknown) ?? "");
+    }
     for (const col of outputs) {
       const cell = String((rule[col.id] as unknown) ?? "").trim();
+      ruleRaw[col.id] = String((rule[col.id] as unknown) ?? "");
       if (cell === "") continue;
       const field = col.field ?? col.name ?? col.id;
       try {
@@ -358,22 +397,23 @@ function evaluateDecisionTable(
         );
       } catch (exc) {
         throw new Error(
-          `${labelOf(node)}: rule ${rule._id ?? "?"} output ${field} \`${cell}\` failed — ${
+          `${labelOf(node)}: rule ${rule._id ?? ri} output ${field} \`${cell}\` failed — ${
             exc instanceof Error ? exc.message : String(exc)
           }`,
         );
       }
     }
 
-    hitRuleIds.push(String(rule._id ?? ""));
+    matchedRows.push({ index: ri, reference_map: referenceMap, rule: ruleRaw });
     collected.push(rowOutput);
     if (hitPolicy === "first") break;
   }
 
-  if (hitPolicy === "collect") {
-    return { output: collected, hitRuleIds };
-  }
-  return { output: collected[0] ?? {}, hitRuleIds };
+  return {
+    output: hitPolicy === "collect" ? collected : (collected[0] ?? {}),
+    hitPolicy,
+    matchedRows,
+  };
 }
 
 async function evaluateFunctionNode(

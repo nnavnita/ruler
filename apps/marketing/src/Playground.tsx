@@ -4,7 +4,8 @@ import {
   JsonSourceEditor,
 } from "ruler-editor";
 import type { EvaluationResponse, JdmContent } from "ruler-editor";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { evaluateJdm } from "./lib/zen";
 import { starterGraph, starterInput } from "./lib/starterGraph";
 
@@ -23,6 +24,16 @@ export function Playground() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [showAi, setShowAi] = useState(false);
   const [view, setView] = useState<ViewMode>("visual");
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen]);
 
   const handleEvaluate = async () => {
     setStatus({ kind: "running" });
@@ -41,7 +52,7 @@ export function Playground() {
       const response = await evaluateJdm(content, parsed);
       setTrace({
         result: response.result,
-        trace: (response.trace as EvaluationResponse["trace"]) ?? null,
+        trace: (response.trace as unknown as EvaluationResponse["trace"]) ?? null,
         performance: response.performance ?? null,
         rule_version: 0,
       });
@@ -133,7 +144,7 @@ export function Playground() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="h-[520px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="relative h-[520px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
           {view === "visual" ? (
             <DecisionGraphEditor
               value={content}
@@ -146,6 +157,15 @@ export function Playground() {
               onChange={setContent}
               className="h-full rounded-none border-0"
             />
+          )}
+          {view === "visual" && !fullscreen && (
+            <button
+              onClick={() => setFullscreen(true)}
+              className="absolute right-3 top-3 rounded-md border border-slate-300 bg-white/95 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800"
+              title="Open graph fullscreen"
+            >
+              ⛶ Fullscreen
+            </button>
           )}
         </div>
 
@@ -177,6 +197,41 @@ export function Playground() {
           </div>
         </aside>
       </div>
+
+      {fullscreen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[200] flex flex-col bg-white dark:bg-slate-950">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2 dark:border-slate-800">
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                Ruler graph — fullscreen
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleEvaluate}
+                  disabled={status.kind === "running"}
+                  className="rounded-md bg-amber-400 px-3 py-1.5 text-sm font-medium text-amber-950 hover:bg-amber-300 disabled:opacity-50"
+                >
+                  {status.kind === "running" ? "Evaluating…" : "Evaluate"}
+                </button>
+                <button
+                  onClick={() => setFullscreen(false)}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  Close ✕
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <DecisionGraphEditor
+                value={content}
+                onChange={setContent}
+                trace={trace}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </section>
   );
 }
