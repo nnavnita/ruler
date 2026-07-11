@@ -35,26 +35,24 @@ interface SwitchTraceData {
   statements?: { id: string }[];
 }
 
-const HIT_EDGE_STROKE = "#f59e0b";
-const HIT_EDGE_STYLE = {
-  stroke: HIT_EDGE_STROKE,
-  strokeWidth: 3.5,
-  filter: "drop-shadow(0 0 6px rgba(251, 191, 36, 0.75))",
-};
+const HIT_STROKE = "#f59e0b";
 
 /**
  * Visual JDM editor. Layers amber-glow trace highlighting on top of
  * `@gorules/jdm-editor`.
  *
- * Approach:
- * 1. Nodes — jdm-editor tags trace hits with `.grl-dn--success`; we
- *    override that class with an unmistakable amber ring + light text.
- * 2. Edges — reactflow won't tag them by our JDM edge ids, so we mutate
- *    the value handed to <DecisionGraph> and set `animated: true` +
- *    a per-edge `style` on hits. onChange strips those synth fields so
- *    parent state stays clean.
- * 3. Switch statement rows — MutationObserver walks the wrapper and
- *    tags matched rows via id-attributes we can find.
+ * jdm-editor renders decision-graph nodes with a dark chrome regardless
+ * of the surrounding page theme, so hit-node styling is always the same
+ * dark-amber-inside-with-amber-outline look — no media query.
+ *
+ * Edges are hard to select from CSS reliably, so we do two things:
+ *   1) mutate the value handed to <DecisionGraph> to set `animated: true`
+ *      + a per-edge inline style. Reactflow spreads these through in
+ *      most rendering paths.
+ *   2) emit a scoped inline <style> block keyed off `data-id="<edgeId>"`
+ *      so we still win when (1) is silently dropped.
+ * onChange strips the synthetic props before bubbling up so parent
+ * state stays clean JDM.
  */
 export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
   const { value, onChange, trace, className, style, disabled } = props;
@@ -116,12 +114,15 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
               ...e,
               animated: true,
               className: "ruler-hit-edge",
-              style: HIT_EDGE_STYLE,
+              style: {
+                stroke: HIT_STROKE,
+                strokeWidth: 3.5,
+              },
               markerEnd: {
                 type: "arrowclosed",
-                color: HIT_EDGE_STROKE,
-                width: 20,
-                height: 20,
+                color: HIT_STROKE,
+                width: 22,
+                height: 22,
               },
             }
           : e,
@@ -135,7 +136,6 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
       const graph = next as unknown as { edges?: JdmEdgeLite[] };
       const edges = graph.edges ?? [];
       const stripped = edges.map((e) => {
-        // Drop synthetic decoration keys before bubbling up to parent.
         const { animated: _a, className: _c, style: _s, markerEnd: _m, ...rest } =
           e as Record<string, unknown>;
         void _a;
@@ -147,6 +147,43 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
       onChange({ ...(next as object), edges: stripped } as JdmContent);
     };
   }, [onChange]);
+
+  const edgeStyleTag = useMemo(() => {
+    if (hitEdgeIds.size === 0) return null;
+    const selectors = Array.from(hitEdgeIds)
+      .flatMap((id) => {
+        const esc = id.replace(/["\\]/g, "\\$&");
+        return [
+          `.ruler-graph [data-id="${esc}"] .react-flow__edge-path`,
+          `.ruler-graph [data-id="${esc}"] path.react-flow__edge-path`,
+          `.ruler-graph [data-testid="rf__edge-${esc}"] .react-flow__edge-path`,
+          `.ruler-graph g[data-id="${esc}"] path`,
+        ];
+      })
+      .join(",\n");
+    const arrowSelectors = Array.from(hitEdgeIds)
+      .flatMap((id) => {
+        const esc = id.replace(/["\\]/g, "\\$&");
+        return [
+          `.ruler-graph [data-id="${esc}"] marker polygon`,
+          `.ruler-graph [data-id="${esc}"] marker path`,
+        ];
+      })
+      .join(",\n");
+    return (
+      <style>{`
+        ${selectors} {
+          stroke: ${HIT_STROKE} !important;
+          stroke-width: 3.5px !important;
+          filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.85));
+        }
+        ${arrowSelectors} {
+          fill: ${HIT_STROKE} !important;
+          stroke: ${HIT_STROKE} !important;
+        }
+      `}</style>
+    );
+  }, [hitEdgeIds]);
 
   useEffect(() => {
     const root = wrapperRef.current;
@@ -176,6 +213,7 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
   return (
     <JdmConfigProvider>
       <RulerGraphStyles />
+      {edgeStyleTag}
       <div
         ref={wrapperRef}
         className={"ruler-graph " + (className ?? "")}
@@ -201,56 +239,62 @@ function RulerGraphStyles() {
     const el = document.createElement("style");
     el.setAttribute("data-ruler-graph", "");
     el.textContent = `
-      /* ============================================================
-       * Hit node
-       * ============================================================ */
+      /* jdm-editor nodes are dark-themed regardless of page theme, so
+         apply the amber-on-dark treatment universally — no media
+         query, no light-body/light-text clash. */
+
       .ruler-graph .grl-dn--success {
-        --node-background: #fef3c7;
+        --node-background: #1f180a;
         outline: 3px solid #f59e0b;
         outline-offset: 2px;
         border-radius: 10px;
-        box-shadow: 0 0 22px rgba(251, 191, 36, 0.65);
+        box-shadow: 0 0 24px rgba(251, 191, 36, 0.6);
       }
-      /* Ensure header + body content stay readable. Nuclear color reset
-         so jdm-editor's internal syntax highlights don't override. */
-      @media (prefers-color-scheme: dark) {
-        .ruler-graph .grl-dn--success {
-          --node-background: #1f180a;
-          outline-color: #fbbf24;
-          box-shadow: 0 0 26px rgba(251, 191, 36, 0.55);
-        }
-        .ruler-graph .grl-dn--success,
-        .ruler-graph .grl-dn--success *:not(button):not(svg):not(path) {
-          color: #fef3c7 !important;
-        }
-        /* Preserve icon / SVG stroke colours */
-        .ruler-graph .grl-dn--success svg { color: #fef3c7 !important; }
-        /* jdm-editor's expression / syntax highlight tokens sit on the
-           node body — bump them to a light accent so they don't blend
-           with the amber background. */
-        .ruler-graph .grl-dn--success .cm-editor,
-        .ruler-graph .grl-dn--success .cm-editor .cm-content,
-        .ruler-graph .grl-dn--success .cm-editor .cm-line,
-        .ruler-graph .grl-dn--success .cm-editor .tok-string,
-        .ruler-graph .grl-dn--success .cm-editor .tok-keyword,
-        .ruler-graph .grl-dn--success .cm-editor .tok-variableName,
-        .ruler-graph .grl-dn--success .cm-editor .tok-atom {
-          color: #fed7aa !important;
-          background: transparent !important;
-        }
+      /* Force every descendant text to a light peach so nothing stays
+         dark on the dark amber body. Skip icons / SVG stroke colours. */
+      .ruler-graph .grl-dn--success,
+      .ruler-graph .grl-dn--success *:not(svg):not(path):not(polygon):not(rect):not(circle):not(line):not(button) {
+        color: #fef3c7 !important;
+      }
+      .ruler-graph .grl-dn--success svg { color: #fef3c7 !important; }
+      /* jdm-editor uses CodeMirror for expression editing; syntax-
+         highlight tokens end up on the dark body and must be forced to
+         legible colours too. */
+      .ruler-graph .grl-dn--success .cm-editor,
+      .ruler-graph .grl-dn--success .cm-editor .cm-content,
+      .ruler-graph .grl-dn--success .cm-editor .cm-line {
+        color: #fed7aa !important;
+        background: transparent !important;
+      }
+      .ruler-graph .grl-dn--success .cm-editor .tok-string { color: #fcd34d !important; }
+      .ruler-graph .grl-dn--success .cm-editor .tok-keyword { color: #fdba74 !important; }
+      .ruler-graph .grl-dn--success .cm-editor .tok-atom { color: #fdba74 !important; }
+      .ruler-graph .grl-dn--success .cm-editor .tok-variableName { color: #fed7aa !important; }
+      .ruler-graph .grl-dn--success .cm-editor .tok-number { color: #fcd34d !important; }
+      .ruler-graph .grl-dn--success .cm-editor .tok-operator { color: #fdba74 !important; }
+
+      /* Hit switch statement row — force amber wash + light text
+         regardless of theme. */
+      .ruler-graph .ruler-hit-statement,
+      .ruler-graph .ruler-hit-statement * {
+        background: transparent;
+        color: #1f180a !important;
+      }
+      .ruler-graph .ruler-hit-statement {
+        background: #fbbf24 !important;
+        border: 2px solid #f59e0b !important;
+        border-radius: 6px;
+        box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
       }
 
-      /* ============================================================
-       * Hit edge
-       * Reactflow's animated class gives us the base treatment; we
-       * repaint stroke + width + glow.
-       * ============================================================ */
+      /* Hit edge base treatment via the 'animated' class we set on the
+         value. Reactflow adds this class when animated=true is on the
+         edge object. */
       .ruler-graph .react-flow__edge.animated .react-flow__edge-path,
-      .ruler-graph .react-flow__edge.ruler-hit-edge .react-flow__edge-path,
-      .ruler-graph g.ruler-hit-edge path.react-flow__edge-path {
+      .ruler-graph .react-flow__edge.ruler-hit-edge .react-flow__edge-path {
         stroke: #f59e0b !important;
         stroke-width: 3.5px !important;
-        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.75));
+        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.85));
       }
       .ruler-graph .react-flow__edge.animated marker polygon,
       .ruler-graph .react-flow__edge.animated marker path,
@@ -258,23 +302,6 @@ function RulerGraphStyles() {
       .ruler-graph .react-flow__edge.ruler-hit-edge marker path {
         fill: #f59e0b !important;
         stroke: #f59e0b !important;
-      }
-
-      /* ============================================================
-       * Hit switch statement row
-       * ============================================================ */
-      .ruler-graph .ruler-hit-statement {
-        background: rgba(251, 191, 36, 0.36) !important;
-        border-left: 5px solid #f59e0b !important;
-        box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.65),
-                    0 0 10px rgba(251, 191, 36, 0.55);
-        border-radius: 6px;
-      }
-      @media (prefers-color-scheme: dark) {
-        .ruler-graph .ruler-hit-statement,
-        .ruler-graph .ruler-hit-statement * {
-          color: #fef3c7 !important;
-        }
       }
     `;
     document.head.appendChild(el);
