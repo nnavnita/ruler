@@ -13,3 +13,4 @@ uv.lock
 *.log
 data/
 !data/.gitkeep
+*.tsbuildinfo
