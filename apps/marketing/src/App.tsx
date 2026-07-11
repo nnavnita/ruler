@@ -56,28 +56,42 @@ function Features() {
       pill: "PY",
       pillTone: "amber",
       name: "ruler-engine",
-      body: "Framework-agnostic Python library wrapping GoRules Zen. Pluggable storage + audit sinks. FastAPI, Flask, Lambda, or a script.",
+      body: "Framework-agnostic Python library wrapping GoRules Zen. Version store, audit sink, and test harness — all pluggable. FastAPI, Flask, Lambda, or a script.",
       code: "pip install ruler-engine",
     },
     {
       pill: "TS",
       pillTone: "sky",
       name: "@ruler/react-editor",
-      body: "React components for the visual editor, trace overlay, and audit-log table. Typed HTTP client included. Peer deps: React 18+.",
+      body: "React components: editor, trace overlay, versions panel, tests panel, replay panel, audit log. Typed HTTP client included.",
       code: "pnpm add @ruler/react-editor",
     },
     {
-      pill: "API",
+      pill: "GO",
       pillTone: "emerald",
+      name: "go-sdk",
+      body: "Native Go client — mirrors the full Python surface (rules, versions, transitions, replay, tests, audit) over HTTP.",
+      code: "go get github.com/nnavnita/ruler/packages/go-sdk/ruler",
+    },
+    {
+      pill: "JVM",
+      pillTone: "violet",
+      name: "java-sdk",
+      body: "Java 17+ client using Jackson + java.net.http. Records for models. Same surface as the Go and Python SDKs.",
+      code: "io.ruler:client:0.2.0",
+    },
+    {
+      pill: "API",
+      pillTone: "amber",
       name: "reference service",
-      body: "FastAPI service that wires the Python engine to a small HTTP surface. Java, Go, and other backends consume it as plain JSON.",
+      body: "FastAPI service that wires the Python engine to a small HTTP surface — the same one every SDK speaks.",
       code: "uvicorn demo_api.main:app",
     },
     {
       pill: "WEB",
-      pillTone: "violet",
+      pillTone: "sky",
       name: "reference client",
-      body: "Vite + React demo app showing the editor, trace overlay, and log viewer wired end-to-end. Fork it, or copy the bits you want.",
+      body: "Vite + React demo showing editor, versions, tests, replay, and logs wired end-to-end. Fork it, or copy the bits you want.",
       code: "pnpm --filter demo-web dev",
     },
   ];
@@ -180,21 +194,28 @@ function Architecture() {
     <section className="mt-16">
       <h2 className="mb-3 text-xl font-semibold tracking-tight">Architecture</h2>
       <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-100 shadow-sm">
-{`┌─────────────────────┐    ┌─────────────────────┐
-│  React frontend     │    │  Java / Python /    │
-│  @ruler/react-editor│    │  anything backend   │
-└──────────┬──────────┘    └──────────┬──────────┘
-           │  HTTP + JSON             │  pip install
-           ▼                          ▼  ruler-engine
-┌─────────────────────────────────────────────────┐
-│  FastAPI reference service (demo-api)           │
-│  · rules · evaluate · trace · audit log         │
-└──────────────────────┬──────────────────────────┘
-                       │  embeds
-                       ▼
-┌─────────────────────────────────────────────────┐
-│  ruler-engine  →  GoRules Zen (Rust core)       │
-└─────────────────────────────────────────────────┘`}
+{`┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ React app    │  │ Go service   │  │ Java service │  │ Python app   │
+│ react-editor │  │ go-sdk       │  │ java-sdk     │  │ ruler-engine │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │ HTTP + JSON     │ HTTP + JSON     │ HTTP + JSON     │ embed
+       ▼                 ▼                 ▼                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  FastAPI reference service (demo-api)                               │
+│  rules · versions · transitions · replay · tests · audit            │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │  uses
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  ruler-engine                                                       │
+│  · pluggable version store · audit sink · test store                │
+│  · draft → review → publish · replay history · deep-equal tests     │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │  wraps
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  GoRules Zen (Rust core)                                            │
+└─────────────────────────────────────────────────────────────────────┘`}
       </pre>
     </section>
   );

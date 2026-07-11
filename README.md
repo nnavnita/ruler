@@ -1,19 +1,22 @@
 # Ruler
 
-Rule engine with visual editor, live trace overlay, and audit history. GoRules JDM (Zen Engine) under the hood.
+Rule engine with visual editor, live trace overlay, versioned rule ops (draft → review → publish), replay, and a test harness. GoRules JDM (Zen Engine) under the hood; opinionated ops layer on top.
 
 Monorepo ships:
 
-- **`@ruler/react-editor`** — React/TS component library. Wraps `@gorules/jdm-editor`, adds trace overlay, log viewer, and typed HTTP client. Drop into any React app.
-- **`ruler-engine`** (Python, `pip install ruler-engine`) — thin lib around `zen-engine`. Pluggable storage + audit sinks. Framework-agnostic.
-- **`demo-api`** — FastAPI service using `ruler-engine`. Reference backend.
-- **`demo-web`** — Vite React app using `@ruler/react-editor`. Reference frontend.
+- **`@ruler/react-editor`** — React/TS component library. Wraps `@gorules/jdm-editor`; adds trace overlay, log viewer, versions panel, tests panel, replay panel, and a typed HTTP client.
+- **`ruler-engine`** (Python, `pip install ruler-engine`) — framework-agnostic rule engine. Pluggable rule storage, version store, test store, and audit sink. Wraps `zen-engine`.
+- **`demo-api`** — FastAPI reference service using `ruler-engine`.
+- **`demo-web`** — Vite React reference client using `@ruler/react-editor`.
+- **`packages/go-sdk`** — Go HTTP client (`github.com/nnavnita/ruler/packages/go-sdk/ruler`).
+- **`packages/java-sdk`** — Java 17+ HTTP client (`io.ruler:client`, Jackson).
 
 ## Consumers
 
-- **Python backend:** `pip install ruler-engine`, embed. Storage/audit interfaces are pluggable — swap in-memory for Postgres, log to S3, etc.
-- **Java backend:** call `demo-api` over HTTP. (Native JVM lib possible via zen-engine's JNI binding — deferred until asked.)
-- **React frontend:** `pnpm add @ruler/react-editor`, drop `<DecisionGraphEditor />` and `<LogsViewer />` into your app.
+- **Python backend:** `pip install ruler-engine`, embed. Storage / version / audit / test interfaces are pluggable — swap in-memory for Postgres, log to S3, etc.
+- **Go backend:** `go get github.com/nnavnita/ruler/packages/go-sdk/ruler`, talk to the reference service (or any compatible one) over HTTP.
+- **Java backend:** grab `io.ruler:client`, same HTTP surface. Native JVM engine (JNI wrapper around zen-engine Rust core) is a future add.
+- **React frontend:** `pnpm add @ruler/react-editor`, drop `<DecisionGraphEditor />`, `<VersionsPanel />`, `<TestsPanel />`, `<LogsViewer />` wherever you need them.
 
 ## Layout
 
