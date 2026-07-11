@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Playground } from "./Playground";
 
 export function App() {
@@ -7,8 +8,7 @@ export function App() {
       <Ctas />
       <Playground />
       <Features />
-      <PythonSnippet />
-      <ReactSnippet />
+      <UsageSection />
       <Architecture />
       <Footer />
     </main>
@@ -138,12 +138,13 @@ function pillClass(tone: string) {
   }
 }
 
-function PythonSnippet() {
-  return (
-    <section className="mt-16">
-      <h2 className="mb-3 text-xl font-semibold tracking-tight">Python, minimal</h2>
-      <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-sm text-slate-100 shadow-sm">
-{`from ruler import RuleEngine, InMemoryStorage, InMemoryAuditSink
+type UsageLang = "python" | "go" | "java" | "react";
+
+const USAGE: Record<UsageLang, { label: string; install: string; code: string }> = {
+  python: {
+    label: "Python",
+    install: "pip install ruler-python-sdk",
+    code: `from ruler import RuleEngine, InMemoryStorage, InMemoryAuditSink
 
 engine = RuleEngine(
     storage=InMemoryStorage(),
@@ -155,18 +156,58 @@ engine.save_rule("discount", jdm_json_dict)
 outcome = engine.evaluate("discount", {"age": 25, "tier": "gold"})
 print(outcome.result)        # -> {"discount": 0.20}
 print(outcome.performance)   # -> "312µs"
-print(outcome.trace)         # -> dict of executed node outputs`}
-      </pre>
-    </section>
-  );
-}
+print(outcome.trace)         # -> dict of executed node outputs`,
+  },
+  go: {
+    label: "Go",
+    install: "go get github.com/nnavnita/ruler/packages/go-sdk/ruler",
+    code: `package main
 
-function ReactSnippet() {
-  return (
-    <section className="mt-16">
-      <h2 className="mb-3 text-xl font-semibold tracking-tight">React, minimal</h2>
-      <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-sm text-slate-100 shadow-sm">
-{`import {
+import (
+    "context"
+    "fmt"
+
+    "github.com/nnavnita/ruler/packages/go-sdk/ruler"
+)
+
+func main() {
+    client := ruler.NewClient("http://localhost:8000")
+
+    resp, err := client.Evaluate(
+        context.Background(),
+        "discount",
+        map[string]any{"tier": "gold", "age": 25},
+        nil,
+    )
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("v%d in %v: %s\\n",
+        resp.RuleVersion, *resp.Performance, resp.Result)
+}`,
+  },
+  java: {
+    label: "Java",
+    install: "io.ruler:ruler-java-sdk:0.2.1",
+    code: `import io.ruler.client.RulerClient;
+import io.ruler.client.model.EvaluationResponse;
+import java.util.Map;
+
+var client = RulerClient.create("http://localhost:8000");
+
+EvaluationResponse resp = client.evaluate(
+    "discount",
+    Map.of("tier", "gold", "age", 25)
+);
+
+System.out.println(resp.result());       // -> {discount=0.20, tier=gold, age=25}
+System.out.println(resp.performance());  // -> "312µs"
+System.out.println(resp.ruleVersion());  // -> 3`,
+  },
+  react: {
+    label: "React",
+    install: "pnpm add ruler-editor",
+    code: `import {
   DecisionGraphEditor,
   LogsViewer,
   createRulerClient,
@@ -183,7 +224,43 @@ export function App() {
       <LogsViewer client={client} />
     </>
   );
-}`}
+}`,
+  },
+};
+
+function UsageSection() {
+  const [lang, setLang] = useState<UsageLang>("python");
+  const current = USAGE[lang];
+  const langs = Object.keys(USAGE) as UsageLang[];
+
+  return (
+    <section className="mt-16">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">Usage</h2>
+        <div className="flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1 text-sm dark:border-slate-800 dark:bg-slate-950">
+          {langs.map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={
+                "rounded-md px-3 py-1 text-sm font-medium transition " +
+                (lang === l
+                  ? "bg-slate-900 text-white"
+                  : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")
+              }
+            >
+              {USAGE[l].label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <pre className="mb-2 rounded-md bg-amber-100 px-3 py-2 font-mono text-xs text-amber-900">
+        {current.install}
+      </pre>
+
+      <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-sm text-slate-100 shadow-sm">
+        {current.code}
       </pre>
     </section>
   );
