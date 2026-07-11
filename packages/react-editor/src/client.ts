@@ -2,10 +2,16 @@ import type {
   AuditRecord,
   EvaluationResponse,
   JdmContent,
+  ReplayEntry,
   RuleRecord,
+  RuleTest,
+  RuleTestResult,
+  RuleVersion,
+  StatusTransition,
 } from "./types";
 
 export interface RulerClient {
+  // legacy rule surface
   listRules: () => Promise<RuleRecord[]>;
   getRule: (name: string) => Promise<RuleRecord>;
   saveRule: (name: string, content: JdmContent) => Promise<RuleRecord>;
@@ -13,9 +19,56 @@ export interface RulerClient {
   evaluate: (
     name: string,
     input: Record<string, unknown>,
+    opts?: { version?: number },
   ) => Promise<EvaluationResponse>;
+
+  // versions
+  listVersions: (name: string) => Promise<RuleVersion[]>;
+  getVersion: (name: string, version: number) => Promise<RuleVersion>;
+  createDraft: (
+    name: string,
+    content: JdmContent,
+    opts?: { author?: string; notes?: string },
+  ) => Promise<RuleVersion>;
+  transitionVersion: (
+    name: string,
+    version: number,
+    action: StatusTransition,
+    opts?: { reviewer?: string; comment?: string },
+  ) => Promise<RuleVersion>;
+
+  // replay
+  replay: (
+    name: string,
+    version: number,
+    inputs: Record<string, unknown>[],
+  ) => Promise<ReplayEntry[]>;
+  replayHistory: (
+    name: string,
+    version: number,
+    opts?: { limit?: number },
+  ) => Promise<ReplayEntry[]>;
+
+  // tests
+  listTests: (name: string) => Promise<RuleTest[]>;
+  saveTest: (name: string, test: SaveTestPayload) => Promise<RuleTest>;
+  deleteTest: (name: string, testId: string) => Promise<{ deleted: boolean }>;
+  runTests: (
+    name: string,
+    opts?: { version?: number },
+  ) => Promise<RuleTestResult[]>;
+
+  // audit
   listLogs: (opts?: { limit?: number; ruleName?: string }) => Promise<AuditRecord[]>;
   getLog: (id: string) => Promise<AuditRecord>;
+}
+
+export interface SaveTestPayload {
+  id?: string;
+  name: string;
+  input: Record<string, unknown>;
+  expected: unknown;
+  tags?: string[];
 }
 
 export interface CreateRulerClientOptions {
@@ -56,11 +109,63 @@ export function createRulerClient(options: CreateRulerClientOptions): RulerClien
       request<{ deleted: boolean }>(`/api/rules/${encodeURIComponent(name)}`, {
         method: "DELETE",
       }),
-    evaluate: (name, input) =>
-      request<EvaluationResponse>(
-        `/api/rules/${encodeURIComponent(name)}/evaluate`,
+    evaluate: (name, input, opts) => {
+      const qs = opts?.version !== undefined ? `?version=${opts.version}` : "";
+      return request<EvaluationResponse>(
+        `/api/rules/${encodeURIComponent(name)}/evaluate${qs}`,
         { method: "POST", body: JSON.stringify({ input }) },
+      );
+    },
+
+    listVersions: (name) =>
+      request<RuleVersion[]>(`/api/rules/${encodeURIComponent(name)}/versions`),
+    getVersion: (name, version) =>
+      request<RuleVersion>(
+        `/api/rules/${encodeURIComponent(name)}/versions/${version}`,
       ),
+    createDraft: (name, content, opts = {}) =>
+      request<RuleVersion>(`/api/rules/${encodeURIComponent(name)}/versions`, {
+        method: "POST",
+        body: JSON.stringify({ content, ...opts }),
+      }),
+    transitionVersion: (name, version, action, opts = {}) =>
+      request<RuleVersion>(
+        `/api/rules/${encodeURIComponent(name)}/versions/${version}/transition`,
+        { method: "POST", body: JSON.stringify({ action, ...opts }) },
+      ),
+
+    replay: (name, version, inputs) =>
+      request<ReplayEntry[]>(
+        `/api/rules/${encodeURIComponent(name)}/versions/${version}/replay`,
+        { method: "POST", body: JSON.stringify({ inputs }) },
+      ),
+    replayHistory: (name, version, opts = {}) =>
+      request<ReplayEntry[]>(
+        `/api/rules/${encodeURIComponent(name)}/versions/${version}/replay-history`,
+        { method: "POST", body: JSON.stringify({ limit: opts.limit ?? 50 }) },
+      ),
+
+    listTests: (name) =>
+      request<RuleTest[]>(`/api/rules/${encodeURIComponent(name)}/tests`),
+    saveTest: (name, test) =>
+      request<RuleTest>(`/api/rules/${encodeURIComponent(name)}/tests`, {
+        method: "POST",
+        body: JSON.stringify(test),
+      }),
+    deleteTest: (name, testId) =>
+      request<{ deleted: boolean }>(
+        `/api/rules/${encodeURIComponent(name)}/tests/${encodeURIComponent(testId)}`,
+        { method: "DELETE" },
+      ),
+    runTests: (name, opts = {}) =>
+      request<RuleTestResult[]>(
+        `/api/rules/${encodeURIComponent(name)}/tests/run`,
+        {
+          method: "POST",
+          body: JSON.stringify({ version: opts.version ?? null }),
+        },
+      ),
+
     listLogs: (opts = {}) => {
       const params = new URLSearchParams();
       if (opts.limit !== undefined) params.set("limit", String(opts.limit));

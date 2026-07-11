@@ -4,14 +4,12 @@ import { useEffect, useState } from "react";
 import { rulerClient } from "../lib/client";
 import { starterGraph } from "../lib/starterGraph";
 
-const DEFAULT_NAME = "demo";
 const DEFAULT_INPUT = `{
   "age": 25,
   "tier": "gold"
 }`;
 
-export function EditorView() {
-  const [name, setName] = useState(DEFAULT_NAME);
+export function EditorView({ ruleName }: { ruleName: string }) {
   const [content, setContent] = useState<JdmContent>(starterGraph);
   const [inputText, setInputText] = useState(DEFAULT_INPUT);
   const [trace, setTrace] = useState<EvaluationResponse | null>(null);
@@ -20,19 +18,19 @@ export function EditorView() {
   useEffect(() => {
     void (async () => {
       try {
-        const record = await rulerClient.getRule(DEFAULT_NAME);
+        const record = await rulerClient.getRule(ruleName);
         setContent(record.content);
         setStatus(`Loaded '${record.name}' v${record.version}`);
       } catch {
         setStatus("No saved rule yet — starter graph shown");
       }
     })();
-  }, []);
+  }, [ruleName]);
 
   const handleSave = async () => {
     try {
-      const record = await rulerClient.saveRule(name, content);
-      setStatus(`Saved v${record.version} at ${new Date(record.updated_at).toLocaleTimeString()}`);
+      const version = await rulerClient.createDraft(ruleName, content);
+      setStatus(`Saved draft v${version.version}`);
     } catch (exc) {
       setStatus(`Save failed: ${exc instanceof Error ? exc.message : String(exc)}`);
     }
@@ -41,9 +39,9 @@ export function EditorView() {
   const handleEvaluate = async () => {
     try {
       const parsed = JSON.parse(inputText);
-      const response = await rulerClient.evaluate(name, parsed);
+      const response = await rulerClient.evaluate(ruleName, parsed);
       setTrace(response);
-      setStatus(`Evaluated in ${response.performance ?? "?"}`);
+      setStatus(`Evaluated v${response.rule_version} in ${response.performance ?? "?"}`);
     } catch (exc) {
       setStatus(`Evaluate failed: ${exc instanceof Error ? exc.message : String(exc)}`);
     }
@@ -53,17 +51,11 @@ export function EditorView() {
     <div className="grid h-full grid-cols-[1fr_360px]">
       <div className="flex flex-col">
         <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-2">
-          <label className="text-xs text-slate-500">Rule name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded border border-slate-300 px-2 py-1 text-sm"
-          />
           <button
             onClick={handleSave}
             className="rounded bg-slate-900 px-3 py-1 text-sm text-white hover:bg-slate-700"
           >
-            Save
+            Save draft
           </button>
           <button
             onClick={handleEvaluate}

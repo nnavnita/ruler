@@ -6,9 +6,32 @@ from ruler_engine.audit import (
     FileAuditSink,
     InMemoryAuditSink,
 )
-from ruler_engine.engine import EvaluationOutcome, RuleEngine, RuleNotFoundError
-from ruler_engine.schemas import RuleRecord
-from ruler_engine.storage import FileStorage, InMemoryStorage, RuleStorage
+from ruler_engine.engine import (
+    EvaluationOutcome,
+    InvalidStatusTransitionError,
+    ReplayEntry,
+    RuleEngine,
+    RuleNotFoundError,
+    VersionNotFoundError,
+)
+from ruler_engine.schemas import (
+    RuleRecord,
+    RuleStatus,
+    RuleTest,
+    RuleTestResult,
+    RuleVersion,
+)
+from ruler_engine.storage import (
+    FileStorage,
+    FileTestStore,
+    FileVersionStore,
+    InMemoryStorage,
+    InMemoryTestStore,
+    InMemoryVersionStore,
+    RuleStorage,
+    RuleTestStore,
+    RuleVersionStore,
+)
 
 __all__ = [
     "AuditRecord",
@@ -16,12 +39,25 @@ __all__ = [
     "EvaluationOutcome",
     "FileAuditSink",
     "FileStorage",
+    "FileTestStore",
+    "FileVersionStore",
     "InMemoryAuditSink",
     "InMemoryStorage",
+    "InMemoryTestStore",
+    "InMemoryVersionStore",
+    "InvalidStatusTransitionError",
+    "ReplayEntry",
     "RuleEngine",
     "RuleNotFoundError",
     "RuleRecord",
+    "RuleStatus",
     "RuleStorage",
+    "RuleTest",
+    "RuleTestResult",
+    "RuleTestStore",
+    "RuleVersion",
+    "RuleVersionStore",
+    "VersionNotFoundError",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
