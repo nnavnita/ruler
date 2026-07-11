@@ -1,4 +1,4 @@
-import { DecisionGraphEditor } from "@ruler/react-editor";
+import { AiAuthorPanel, DecisionGraphEditor } from "@ruler/react-editor";
 import type { EvaluationResponse, JdmContent } from "@ruler/react-editor";
 import { useState } from "react";
 import { evaluateJdm } from "./lib/zen";
@@ -15,6 +15,7 @@ export function Playground() {
   const [inputText, setInputText] = useState<string>(starterInput);
   const [trace, setTrace] = useState<EvaluationResponse | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [showAi, setShowAi] = useState(false);
 
   const handleEvaluate = async () => {
     setStatus({ kind: "running" });
@@ -59,12 +60,18 @@ export function Playground() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Try it</h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Runs entirely in your browser. GoRules Zen compiled to WebAssembly —
-            no server, nothing leaves this tab.
+            Runs entirely in your browser. Bring your own Anthropic or OpenAI
+            key to compose rules with AI — the key never leaves this tab.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <StatusPill status={status} />
+          <button
+            onClick={() => setShowAi((v) => !v)}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            {showAi ? "Hide AI" : "Compose with AI"}
+          </button>
           <button
             onClick={handleReset}
             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -80,6 +87,19 @@ export function Playground() {
           </button>
         </div>
       </div>
+
+      {showAi && (
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <AiAuthorPanel
+            currentGraph={content}
+            onApply={(next) => {
+              setContent(next);
+              setTrace(null);
+              setStatus({ kind: "idle" });
+            }}
+          />
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="h-[520px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">

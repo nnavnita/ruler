@@ -1,4 +1,4 @@
-import { DecisionGraphEditor } from "@ruler/react-editor";
+import { AiAuthorPanel, DecisionGraphEditor } from "@ruler/react-editor";
 import type { EvaluationResponse, JdmContent } from "@ruler/react-editor";
 import { useEffect, useState } from "react";
 import { rulerClient } from "../lib/client";
@@ -14,6 +14,7 @@ export function EditorView({ ruleName }: { ruleName: string }) {
   const [inputText, setInputText] = useState(DEFAULT_INPUT);
   const [trace, setTrace] = useState<EvaluationResponse | null>(null);
   const [status, setStatus] = useState<string>("");
+  const [showAi, setShowAi] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -48,7 +49,7 @@ export function EditorView({ ruleName }: { ruleName: string }) {
   };
 
   return (
-    <div className="grid h-full grid-cols-[1fr_360px]">
+    <div className="grid h-full grid-cols-[1fr_380px]">
       <div className="flex flex-col">
         <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-2">
           <button
@@ -63,6 +64,12 @@ export function EditorView({ ruleName }: { ruleName: string }) {
           >
             Evaluate
           </button>
+          <button
+            onClick={() => setShowAi((v) => !v)}
+            className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            {showAi ? "Hide AI" : "Author with AI"}
+          </button>
           <span className="ml-auto text-xs text-slate-500">{status}</span>
         </div>
 
@@ -71,7 +78,19 @@ export function EditorView({ ruleName }: { ruleName: string }) {
         </div>
       </div>
 
-      <aside className="flex flex-col border-l border-slate-200 bg-white">
+      <aside className="flex flex-col overflow-auto border-l border-slate-200 bg-white">
+        {showAi && (
+          <div className="border-b border-slate-200 p-4">
+            <AiAuthorPanel
+              currentGraph={content}
+              onApply={(next) => {
+                setContent(next);
+                setStatus("Applied AI-generated graph — save draft to persist");
+              }}
+            />
+          </div>
+        )}
+
         <div className="border-b border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Input context
         </div>
@@ -79,7 +98,7 @@ export function EditorView({ ruleName }: { ruleName: string }) {
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           spellCheck={false}
-          className="h-56 resize-none border-b border-slate-200 bg-slate-950 p-3 font-mono text-xs text-slate-100"
+          className="h-40 resize-none border-b border-slate-200 bg-slate-950 p-3 font-mono text-xs text-slate-100"
         />
 
         <div className="border-b border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">

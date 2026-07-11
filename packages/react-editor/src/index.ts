@@ -13,6 +13,17 @@ export type { TestsPanelProps } from "./TestsPanel";
 export { ReplayPanel } from "./ReplayPanel";
 export type { ReplayPanelProps } from "./ReplayPanel";
 
+export { AiAuthorPanel } from "./AiAuthorPanel";
+export type { AiAuthorPanelProps } from "./AiAuthorPanel";
+
+export {
+  clearLlmConfig,
+  loadLlmConfig,
+  saveLlmConfig,
+  DEFAULT_MODELS,
+} from "./lib/keyStorage";
+export type { LlmConfig, LlmProvider } from "./lib/keyStorage";
+
 export { createRulerClient, RulerApiError } from "./client";
 export type {
   CreateRulerClientOptions,
