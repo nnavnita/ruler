@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import uuid
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Protocol
+from typing import Any, Protocol
 
 from ruler.schemas import (
-    AuditRecord,
     RuleRecord,
     RuleStatus,
     RuleTest,
