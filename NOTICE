@@ -1,0 +1,32 @@
+Ruler
+Copyright (c) 2026 nnavnita
+
+This product includes and depends on software developed by third parties.
+Attribution below.
+
+------------------------------------------------------------------------
+GoRules Zen
+Copyright (c) GoRules
+https://github.com/gorules/zen
+Licensed under the MIT License.
+
+Ruler's Python engine (ruler-python-sdk) wraps the `zen-engine` Python
+bindings. Ruler's browser playground uses `@gorules/zen-engine-wasm` for
+client-side expression evaluation.
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+GoRules JDM Editor
+Copyright (c) GoRules
+https://github.com/gorules/jdm-editor
+Licensed under the MIT License.
+
+Ruler's React `<DecisionGraphEditor />` is a thin wrapper around the
+`@gorules/jdm-editor` `DecisionGraph` component. It adds trace overlay
+plumbing and other ops-layer UI on top of the underlying editor.
+------------------------------------------------------------------------
+
+Other dependencies (React, Vite, Tailwind, FastAPI, Pydantic, Jackson,
+etc.) retain their respective upstream licenses. See each package's
+`package.json`, `pyproject.toml`, `go.mod`, or `build.gradle.kts` for the
+authoritative dependency list.
