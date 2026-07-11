@@ -6,7 +6,7 @@ export default {
     "../../packages/editor/src/**/*.{ts,tsx}",
     "../../packages/editor/dist/**/*.{js,cjs}",
   ],
-  darkMode: "media",
+  darkMode: "class",
   theme: {
     extend: {
       colors: {

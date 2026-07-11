@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security disclosure
+    url: https://github.com/nnavnita/ruler/security/advisories/new
+    about: Please report security issues privately, not as a public issue.
+  - name: Playground
+    url: https://nnavnita.github.io/ruler/
+    about: Try Ruler in your browser before filing an issue.

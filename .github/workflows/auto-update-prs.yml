@@ -1,0 +1,60 @@
+name: Auto-update stale PRs
+
+# Twice daily, rebase every open PR that has fallen behind main.
+# - Dependabot PRs get a `@dependabot rebase` comment (Dependabot then
+#   force-pushes an updated branch).
+# - Everything else uses the repo's own "update branch" API, which
+#   merges main into the PR head (falls back to a rebase merge if
+#   configured that way).
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh all stale PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Base commit for `main`
+          BASE=$(gh api "/repos/$REPO/branches/main" --jq '.commit.sha')
+          echo "main is at $BASE"
+
+          # Pull every open PR + its merge state
+          prs=$(gh pr list --state open --limit 100 --json number,author,mergeStateStatus,headRefName,baseRefName --jq '.[]')
+
+          echo "$prs" | while read -r pr; do
+            num=$(echo "$pr" | jq -r '.number')
+            login=$(echo "$pr" | jq -r '.author.login')
+            state=$(echo "$pr" | jq -r '.mergeStateStatus')
+            base=$(echo "$pr" | jq -r '.baseRefName')
+
+            if [ "$base" != "main" ]; then
+              echo "PR #$num: not targeting main ($base), skipping"
+              continue
+            fi
+            if [ "$state" != "BEHIND" ] && [ "$state" != "DIRTY" ]; then
+              echo "PR #$num: $state, no refresh needed"
+              continue
+            fi
+
+            if [ "$login" = "app/dependabot" ] || [ "$login" = "dependabot" ]; then
+              echo "PR #$num (dependabot): rebase comment"
+              gh pr comment "$num" --body "@dependabot rebase" || true
+            else
+              echo "PR #$num: update-branch"
+              gh api -X PUT "/repos/$REPO/pulls/$num/update-branch" \
+                -f expected_head_sha="$(gh pr view "$num" --json headRefOid --jq .headRefOid)" \
+                || echo "update-branch failed on #$num (likely conflict); leaving alone"
+            fi
+          done

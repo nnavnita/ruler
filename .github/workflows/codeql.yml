@@ -21,7 +21,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript-typescript", "python", "go", "java-kotlin"]
+        # java-kotlin excluded until we commit a Gradle wrapper — CodeQL
+        # autobuild needs to actually compile the sources.
+        language: ["javascript-typescript", "python", "go"]
 
     steps:
       - uses: actions/checkout@v4
