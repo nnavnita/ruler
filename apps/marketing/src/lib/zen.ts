@@ -119,7 +119,7 @@ export async function evaluateJdm(
         for (const expr of expressions) {
           if (!expr.key) continue;
           try {
-            next[expr.key] = evaluateExpression(expr.value, incoming);
+            next[expr.key] = evalExpressionSafe(evaluateExpression, expr.value, incoming);
           } catch (exc) {
             throw new Error(
               `${labelOf(node)}: expression \`${expr.value}\` failed — ${
@@ -170,4 +170,38 @@ export async function evaluateJdm(
 
 function labelOf(node: JdmNode) {
   return node.name ? `Node "${node.name}"` : `Node ${node.id}`;
+}
+
+/**
+ * `@gorules/zen-engine-wasm@0.23` truncates decimal results to integers
+ * when marshalling back to JS (0.20 -> 0, 1.5 -> 1). Workaround: wrap the
+ * expression in `string(...)`, then parse the string back on our side.
+ *
+ * Booleans and objects survive the string cast fine (`"true"`, `"[object]"`
+ * strings), so we only re-parse when the source looks like a number literal
+ * or math expression. Fallback: eval raw and use whatever comes back.
+ */
+function evalExpressionSafe(
+  evaluate: (expr: string, ctx: unknown) => unknown,
+  expr: string,
+  ctx: unknown,
+): unknown {
+  const wrapped = `string(${expr})`;
+  try {
+    const raw = evaluate(wrapped, ctx);
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (trimmed === "true") return true;
+      if (trimmed === "false") return false;
+      if (trimmed === "null") return null;
+      if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+        const n = Number(trimmed);
+        if (!Number.isNaN(n)) return n;
+      }
+      return raw;
+    }
+    return raw;
+  } catch {
+    return evaluate(expr, ctx);
+  }
 }
