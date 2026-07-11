@@ -1,0 +1,1 @@
+"""Ruler reference FastAPI service."""
