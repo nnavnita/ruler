@@ -23,6 +23,7 @@ interface JdmEdgeLite {
   sourceId: string;
   targetId: string;
   sourceHandle?: string;
+  [k: string]: unknown;
 }
 
 interface JdmNodeLite {
@@ -34,12 +35,26 @@ interface SwitchTraceData {
   statements?: { id: string }[];
 }
 
+const HIT_EDGE_STROKE = "#f59e0b";
+const HIT_EDGE_STYLE = {
+  stroke: HIT_EDGE_STROKE,
+  strokeWidth: 3.5,
+  filter: "drop-shadow(0 0 6px rgba(251, 191, 36, 0.75))",
+};
+
 /**
- * Visual JDM editor. Wraps `@gorules/jdm-editor`'s DecisionGraph with:
- * - stronger amber emphasis on executed nodes (both light + dark themes)
- * - post-render DOM tagging so executed edges glow amber
- * - post-render DOM tagging so the specific matched statement inside a
- *   switch node gets an amber accent alongside the whole node's ring
+ * Visual JDM editor. Layers amber-glow trace highlighting on top of
+ * `@gorules/jdm-editor`.
+ *
+ * Approach:
+ * 1. Nodes — jdm-editor tags trace hits with `.grl-dn--success`; we
+ *    override that class with an unmistakable amber ring + light text.
+ * 2. Edges — reactflow won't tag them by our JDM edge ids, so we mutate
+ *    the value handed to <DecisionGraph> and set `animated: true` +
+ *    a per-edge `style` on hits. onChange strips those synth fields so
+ *    parent state stays clean.
+ * 3. Switch statement rows — MutationObserver walks the wrapper and
+ *    tags matched rows via id-attributes we can find.
  */
 export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
   const { value, onChange, trace, className, style, disabled } = props;
@@ -56,8 +71,9 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
     };
   }, [trace]);
 
-  const { hitEdgeIds, hitStatements } = useMemo(() => {
-    if (!trace?.trace) return { hitEdgeIds: [] as string[], hitStatements: [] as string[] };
+  const { hitEdgeIds, hitStatementIds } = useMemo(() => {
+    if (!trace?.trace)
+      return { hitEdgeIds: new Set<string>(), hitStatementIds: new Set<string>() };
     const traceMap = trace.trace;
     const graph = value as unknown as {
       nodes?: JdmNodeLite[];
@@ -67,8 +83,8 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
     const edges = graph.edges ?? [];
     const nodesById = new Map(nodes.map((n) => [n.id, n]));
 
-    const edgeIds: string[] = [];
-    const stmtIds: string[] = [];
+    const edgeIds = new Set<string>();
+    const stmtIds = new Set<string>();
     for (const e of edges) {
       const src = nodesById.get(e.sourceId);
       const srcTrace = traceMap[e.sourceId];
@@ -81,68 +97,81 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
           undefined;
         const fired = sw?.statements ?? [];
         if (!fired.some((s) => s.id === e.sourceHandle)) continue;
-        stmtIds.push(...fired.map((s) => s.id));
+        for (const s of fired) stmtIds.add(s.id);
       }
-      edgeIds.push(e.id);
+      edgeIds.add(e.id);
     }
-    return { hitEdgeIds: edgeIds, hitStatements: Array.from(new Set(stmtIds)) };
+    return { hitEdgeIds: edgeIds, hitStatementIds: stmtIds };
   }, [value, trace]);
+
+  const decoratedValue = useMemo(() => {
+    if (hitEdgeIds.size === 0) return value;
+    const graph = value as unknown as { edges?: JdmEdgeLite[] };
+    const edges = graph.edges ?? [];
+    return {
+      ...(value as object),
+      edges: edges.map((e) =>
+        hitEdgeIds.has(e.id)
+          ? {
+              ...e,
+              animated: true,
+              className: "ruler-hit-edge",
+              style: HIT_EDGE_STYLE,
+              markerEnd: {
+                type: "arrowclosed",
+                color: HIT_EDGE_STROKE,
+                width: 20,
+                height: 20,
+              },
+            }
+          : e,
+      ),
+    } as JdmContent;
+  }, [value, hitEdgeIds]);
+
+  const handleChange = useMemo(() => {
+    if (!onChange) return undefined;
+    return (next: JdmContent) => {
+      const graph = next as unknown as { edges?: JdmEdgeLite[] };
+      const edges = graph.edges ?? [];
+      const stripped = edges.map((e) => {
+        // Drop synthetic decoration keys before bubbling up to parent.
+        const { animated: _a, className: _c, style: _s, markerEnd: _m, ...rest } =
+          e as Record<string, unknown>;
+        void _a;
+        void _c;
+        void _s;
+        void _m;
+        return rest as unknown as JdmEdgeLite;
+      });
+      onChange({ ...(next as object), edges: stripped } as JdmContent);
+    };
+  }, [onChange]);
 
   useEffect(() => {
     const root = wrapperRef.current;
-    if (!root) return;
+    if (!root || hitStatementIds.size === 0) return;
 
-    const applied: HTMLElement[] = [];
-
-    // Give the DOM a tick to catch up with reactflow's rerender.
-    const raf = window.requestAnimationFrame(() => {
-      // Clear previous hits.
+    const apply = () => {
       root
-        .querySelectorAll<HTMLElement>(".ruler-hit-edge, .ruler-hit-statement")
-        .forEach((el) => {
-          el.classList.remove("ruler-hit-edge");
-          el.classList.remove("ruler-hit-statement");
-        });
-
-      for (const edgeId of hitEdgeIds) {
-        // reactflow tags each edge <g> with either `data-id` or
-        // `data-testid` depending on version; try both.
-        const escaped = edgeId.replace(/["\\]/g, "\\$&");
+        .querySelectorAll<HTMLElement>(".ruler-hit-statement")
+        .forEach((el) => el.classList.remove("ruler-hit-statement"));
+      for (const id of hitStatementIds) {
+        const esc = id.replace(/["\\]/g, "\\$&");
         const el =
-          root.querySelector<HTMLElement>(`[data-id="${escaped}"]`) ??
-          root.querySelector<HTMLElement>(
-            `[data-testid="rf__edge-${escaped}"]`,
-          );
-        if (el) {
-          el.classList.add("ruler-hit-edge");
-          applied.push(el);
-        }
+          root.querySelector<HTMLElement>(`[data-id="${esc}"]`) ??
+          root.querySelector<HTMLElement>(`[data-statement-id="${esc}"]`) ??
+          root.querySelector<HTMLElement>(`[data-key="${esc}"]`) ??
+          root.querySelector<HTMLElement>(`[id="${esc}"]`);
+        if (el) el.classList.add("ruler-hit-statement");
       }
-
-      for (const stmtId of hitStatements) {
-        const escaped = stmtId.replace(/["\\]/g, "\\$&");
-        // jdm-editor's switch node renders each statement row somewhere
-        // under a container that carries the statement's id. Try several
-        // known selectors.
-        const el =
-          root.querySelector<HTMLElement>(`[data-id="${escaped}"]`) ??
-          root.querySelector<HTMLElement>(`[data-statement-id="${escaped}"]`) ??
-          root.querySelector<HTMLElement>(`[data-key="${escaped}"]`);
-        if (el) {
-          el.classList.add("ruler-hit-statement");
-          applied.push(el);
-        }
-      }
-    });
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      applied.forEach((el) => {
-        el.classList.remove("ruler-hit-edge");
-        el.classList.remove("ruler-hit-statement");
-      });
     };
-  }, [hitEdgeIds, hitStatements, value, trace]);
+
+    apply();
+    const mo = new MutationObserver(() => apply());
+    mo.observe(root, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [hitStatementIds, value, trace]);
 
   return (
     <JdmConfigProvider>
@@ -153,8 +182,8 @@ export function DecisionGraphEditor(props: DecisionGraphEditorProps) {
         style={{ height: "100%", ...style }}
       >
         <DecisionGraph
-          value={value as never}
-          onChange={onChange as never}
+          value={decoratedValue as never}
+          onChange={handleChange as never}
           simulate={simulate as never}
           disabled={disabled}
         />
@@ -172,69 +201,80 @@ function RulerGraphStyles() {
     const el = document.createElement("style");
     el.setAttribute("data-ruler-graph", "");
     el.textContent = `
-      /* --- Hit node styling ---------------------------------------- */
+      /* ============================================================
+       * Hit node
+       * ============================================================ */
       .ruler-graph .grl-dn--success {
         --node-background: #fef3c7;
-        box-shadow: 0 0 0 2px #f59e0b, 0 0 12px rgba(251, 191, 36, 0.6);
-        border-radius: 8px;
+        outline: 3px solid #f59e0b;
+        outline-offset: 2px;
+        border-radius: 10px;
+        box-shadow: 0 0 22px rgba(251, 191, 36, 0.65);
       }
+      /* Ensure header + body content stay readable. Nuclear color reset
+         so jdm-editor's internal syntax highlights don't override. */
       @media (prefers-color-scheme: dark) {
         .ruler-graph .grl-dn--success {
-          --node-background: #3b2f0d;
-          box-shadow: 0 0 0 2px #fbbf24, 0 0 18px rgba(251, 191, 36, 0.55);
+          --node-background: #1f180a;
+          outline-color: #fbbf24;
+          box-shadow: 0 0 26px rgba(251, 191, 36, 0.55);
         }
-        /* Force header + body text to a light palette so the dark
-           amber node stays readable. */
         .ruler-graph .grl-dn--success,
-        .ruler-graph .grl-dn--success .grl-dn__header__title,
-        .ruler-graph .grl-dn--success .grl-dn__header__handle,
-        .ruler-graph .grl-dn--success .grl-dn__content,
-        .ruler-graph .grl-dn--success .grl-dn__content * {
+        .ruler-graph .grl-dn--success *:not(button):not(svg):not(path) {
           color: #fef3c7 !important;
+        }
+        /* Preserve icon / SVG stroke colours */
+        .ruler-graph .grl-dn--success svg { color: #fef3c7 !important; }
+        /* jdm-editor's expression / syntax highlight tokens sit on the
+           node body — bump them to a light accent so they don't blend
+           with the amber background. */
+        .ruler-graph .grl-dn--success .cm-editor,
+        .ruler-graph .grl-dn--success .cm-editor .cm-content,
+        .ruler-graph .grl-dn--success .cm-editor .cm-line,
+        .ruler-graph .grl-dn--success .cm-editor .tok-string,
+        .ruler-graph .grl-dn--success .cm-editor .tok-keyword,
+        .ruler-graph .grl-dn--success .cm-editor .tok-variableName,
+        .ruler-graph .grl-dn--success .cm-editor .tok-atom {
+          color: #fed7aa !important;
+          background: transparent !important;
         }
       }
 
-      /* --- Hit edge styling --------------------------------------- */
-      .ruler-graph .react-flow__edge-path {
-        transition: stroke 0.15s ease, stroke-width 0.15s ease;
-      }
-      .ruler-graph .ruler-hit-edge .react-flow__edge-path,
-      .ruler-graph .ruler-hit-edge path.react-flow__edge-path {
+      /* ============================================================
+       * Hit edge
+       * Reactflow's animated class gives us the base treatment; we
+       * repaint stroke + width + glow.
+       * ============================================================ */
+      .ruler-graph .react-flow__edge.animated .react-flow__edge-path,
+      .ruler-graph .react-flow__edge.ruler-hit-edge .react-flow__edge-path,
+      .ruler-graph g.ruler-hit-edge path.react-flow__edge-path {
         stroke: #f59e0b !important;
-        stroke-width: 3px !important;
+        stroke-width: 3.5px !important;
         filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.75));
       }
-      .ruler-graph .ruler-hit-edge .react-flow__edge-path-selector {
-        stroke-width: 24px !important;
-      }
-      /* Any animated marker (arrowhead) on the winning edge. */
-      .ruler-graph .ruler-hit-edge marker path,
-      .ruler-graph .ruler-hit-edge polygon {
+      .ruler-graph .react-flow__edge.animated marker polygon,
+      .ruler-graph .react-flow__edge.animated marker path,
+      .ruler-graph .react-flow__edge.ruler-hit-edge marker polygon,
+      .ruler-graph .react-flow__edge.ruler-hit-edge marker path {
         fill: #f59e0b !important;
         stroke: #f59e0b !important;
       }
 
-      /* --- Hit statement row (inside switch node) ---------------- */
+      /* ============================================================
+       * Hit switch statement row
+       * ============================================================ */
       .ruler-graph .ruler-hit-statement {
-        background: rgba(251, 191, 36, 0.32) !important;
-        border-left: 4px solid #f59e0b !important;
-        box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.55),
-                    0 0 8px rgba(251, 191, 36, 0.6);
-        border-radius: 4px;
+        background: rgba(251, 191, 36, 0.36) !important;
+        border-left: 5px solid #f59e0b !important;
+        box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.65),
+                    0 0 10px rgba(251, 191, 36, 0.55);
+        border-radius: 6px;
       }
       @media (prefers-color-scheme: dark) {
-        .ruler-graph .ruler-hit-statement {
-          background: rgba(251, 191, 36, 0.22) !important;
-          border-left-color: #fbbf24 !important;
+        .ruler-graph .ruler-hit-statement,
+        .ruler-graph .ruler-hit-statement * {
           color: #fef3c7 !important;
         }
-      }
-      /* Also emphasise expression rows that fired (traceData exposes
-         a { [key]: { result } } object). */
-      .ruler-graph .ruler-hit-expression {
-        background: rgba(251, 191, 36, 0.28) !important;
-        border-left: 4px solid #f59e0b !important;
-        border-radius: 4px;
       }
     `;
     document.head.appendChild(el);

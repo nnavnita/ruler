@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Iterable
+from typing import Any
 
 from zen import ZenEngine
 
@@ -389,5 +390,5 @@ def _deep_eq(a: Any, b: Any) -> bool:
             return False
         return all(_deep_eq(a[k], b[k]) for k in a)
     if isinstance(a, list) and isinstance(b, list):
-        return len(a) == len(b) and all(_deep_eq(x, y) for x, y in zip(a, b))
+        return len(a) == len(b) and all(_deep_eq(x, y) for x, y in zip(a, b, strict=True))
     return a == b
