@@ -179,7 +179,7 @@ export function Playground() {
               onChange={(e) => setInputText(e.target.value)}
               spellCheck={false}
               rows={6}
-              className="w-full resize-none rounded-b-xl bg-slate-950 p-3 font-mono text-xs text-slate-100"
+              className="w-full resize-none rounded-b-xl bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
@@ -187,7 +187,7 @@ export function Playground() {
             <div className="border-b border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800">
               Result
             </div>
-            <pre className="max-h-[380px] overflow-auto rounded-b-xl bg-slate-950 p-3 font-mono text-xs text-slate-100">
+            <pre className="max-h-[380px] overflow-auto rounded-b-xl bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100">
 {status.kind === "err"
   ? `// error\n${status.message}`
   : trace
