@@ -114,7 +114,7 @@ function Features() {
               </code>
             </div>
             <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{c.body}</p>
-            <pre className="rounded-md bg-slate-950 p-2 font-mono text-xs text-slate-100">
+            <pre className="rounded-md bg-slate-100 p-2 font-mono text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100">
               {c.code}
             </pre>
           </div>
@@ -261,7 +261,7 @@ function UsageSection() {
         {current.install}
       </pre>
 
-      <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-sm text-slate-100 shadow-sm">
+      <pre className="overflow-auto rounded-xl bg-slate-100 p-4 font-mono text-sm text-slate-800 shadow-sm dark:bg-slate-950 dark:text-slate-100">
         {current.code}
       </pre>
     </section>
@@ -272,7 +272,7 @@ function Architecture() {
   return (
     <section className="mt-16">
       <h2 className="mb-3 text-xl font-semibold tracking-tight">Architecture</h2>
-      <pre className="overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-100 shadow-sm">
+      <pre className="overflow-auto rounded-xl bg-slate-100 p-4 font-mono text-xs leading-relaxed text-slate-800 shadow-sm dark:bg-slate-950 dark:text-slate-100">
 {`┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
 │ React app    │  │ Go service   │  │ Java service │  │ Python app       │
 │ ruler-editor │  │ ruler-go-sdk │  │ruler-java-sdk│  │ ruler-python-sdk │
