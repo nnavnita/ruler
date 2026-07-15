@@ -24,7 +24,6 @@ from pydantic import BaseModel
 
 from ruler import (
     FileAuditSink,
-    FileStorage,
     FileTestStore,
     FileVersionStore,
     InMemoryAuditSink,

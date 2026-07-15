@@ -152,7 +152,7 @@ export async function evaluateJdm(
     if (!node) return incoming;
 
     const nodeStart = performance.now();
-    let output: unknown = incoming;
+    let output: unknown;
     let traceData: unknown = undefined;
     let nextEdges: JdmEdge[] = edgesFrom(nodeId);
 

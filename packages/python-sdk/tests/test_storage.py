@@ -113,7 +113,15 @@ def test_file_storage_shim_persists(tmp_path: Path):
 def test_missing_rule_returns_none():
     storage = InMemoryStorage()
     assert storage.get("nope") is None
-    assert storage.delete("nope") is False
+    deleted = storage.delete("nope")
+    assert deleted is False
+
+
+@pytest.mark.parametrize("rule_name", ["../escape", "/etc/evil", "a/../../b"])
+def test_file_version_store_rejects_path_traversal(rule_name: str, tmp_path: Path):
+    store = FileVersionStore(tmp_path)
+    with pytest.raises(ValueError):
+        store.create_version(rule_name, PASSTHROUGH)
 
 
 @pytest.mark.parametrize("kind", ["memory", "file"])
