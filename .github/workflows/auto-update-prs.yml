@@ -31,7 +31,7 @@ jobs:
           echo "main is at $BASE"
 
           # Pull every open PR + its merge state
-          prs=$(gh pr list --state open --limit 100 --json number,author,mergeStateStatus,headRefName,baseRefName --jq '.[]')
+          prs=$(gh pr list -R "$REPO" --state open --limit 100 --json number,author,mergeStateStatus,headRefName,baseRefName --jq '.[]')
 
           echo "$prs" | while read -r pr; do
             num=$(echo "$pr" | jq -r '.number')
@@ -50,11 +50,11 @@ jobs:
 
             if [ "$login" = "app/dependabot" ] || [ "$login" = "dependabot" ]; then
               echo "PR #$num (dependabot): rebase comment"
-              gh pr comment "$num" --body "@dependabot rebase" || true
+              gh pr comment -R "$REPO" "$num" --body "@dependabot rebase" || true
             else
               echo "PR #$num: update-branch"
               gh api -X PUT "/repos/$REPO/pulls/$num/update-branch" \
-                -f expected_head_sha="$(gh pr view "$num" --json headRefOid --jq .headRefOid)" \
+                -f expected_head_sha="$(gh pr view -R "$REPO" "$num" --json headRefOid --jq .headRefOid)" \
                 || echo "update-branch failed on #$num (likely conflict); leaving alone"
             fi
           done

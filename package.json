@@ -12,5 +12,11 @@
   "packageManager": "pnpm@9.0.0",
   "devDependencies": {
     "typescript": "^5.6.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild@>=0.27.3 <0.28.1": "0.28.1",
+      "uuid@<11.1.1": "11.1.1"
+    }
   }
 }

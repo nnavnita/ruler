@@ -20,6 +20,20 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _safe_child(root: Path, *segments: str) -> Path:
+    """Resolve `segments` under `root`, rejecting path traversal.
+
+    `rule_name` / `test_id` are caller-supplied, so a value like `../x` or
+    an absolute path could otherwise escape the storage root. Resolve both
+    sides and require the result to stay within `root`.
+    """
+    base = root.resolve()
+    child = base.joinpath(*segments).resolve()
+    if child != base and not child.is_relative_to(base):
+        raise ValueError(f"path escapes storage root: {segments!r}")
+    return child
+
+
 # --------------------------------------------------------------------------- #
 # Version store — canonical source of truth for rule content + status flow.  #
 # --------------------------------------------------------------------------- #
@@ -33,14 +47,21 @@ class RuleVersionStore(Protocol):
         *,
         author: str | None = None,
         notes: str | None = None,
-    ) -> RuleVersion: ...
+    ) -> RuleVersion:
+        pass
 
-    def list_versions(self, rule_name: str) -> list[RuleVersion]: ...
-    def get_version(self, rule_name: str, version: int) -> RuleVersion | None: ...
-    def get_published(self, rule_name: str) -> RuleVersion | None: ...
-    def list_rules(self) -> list[str]: ...
-    def update_version(self, version: RuleVersion) -> RuleVersion: ...
-    def delete_version(self, rule_name: str, version: int) -> bool: ...
+    def list_versions(self, rule_name: str) -> list[RuleVersion]:
+        pass
+    def get_version(self, rule_name: str, version: int) -> RuleVersion | None:
+        pass
+    def get_published(self, rule_name: str) -> RuleVersion | None:
+        pass
+    def list_rules(self) -> list[str]:
+        pass
+    def update_version(self, version: RuleVersion) -> RuleVersion:
+        pass
+    def delete_version(self, rule_name: str, version: int) -> bool:
+        pass
 
 
 class InMemoryVersionStore:
@@ -109,12 +130,12 @@ class FileVersionStore:
         self.root.mkdir(parents=True, exist_ok=True)
 
     def _rule_dir(self, rule_name: str) -> Path:
-        d = self.root / rule_name
+        d = _safe_child(self.root, rule_name)
         d.mkdir(parents=True, exist_ok=True)
         return d
 
     def _path(self, rule_name: str, version: int) -> Path:
-        return self._rule_dir(rule_name) / f"v{version}.json"
+        return _safe_child(self._rule_dir(rule_name), f"v{version}.json")
 
     def _all_files(self, rule_name: str) -> Iterable[Path]:
         return sorted(self._rule_dir(rule_name).glob("v*.json"))
@@ -242,11 +263,15 @@ class RuleTestStore(Protocol):
         *,
         tags: list[str] | None = None,
         id: str | None = None,
-    ) -> RuleTest: ...
+    ) -> RuleTest:
+        pass
 
-    def list_tests(self, rule_name: str) -> list[RuleTest]: ...
-    def get_test(self, rule_name: str, test_id: str) -> RuleTest | None: ...
-    def delete_test(self, rule_name: str, test_id: str) -> bool: ...
+    def list_tests(self, rule_name: str) -> list[RuleTest]:
+        pass
+    def get_test(self, rule_name: str, test_id: str) -> RuleTest | None:
+        pass
+    def delete_test(self, rule_name: str, test_id: str) -> bool:
+        pass
 
 
 class InMemoryTestStore:
@@ -294,12 +319,12 @@ class FileTestStore:
         self.root.mkdir(parents=True, exist_ok=True)
 
     def _rule_dir(self, rule_name: str) -> Path:
-        d = self.root / rule_name
+        d = _safe_child(self.root, rule_name)
         d.mkdir(parents=True, exist_ok=True)
         return d
 
     def _path(self, rule_name: str, test_id: str) -> Path:
-        return self._rule_dir(rule_name) / f"{test_id}.json"
+        return _safe_child(self._rule_dir(rule_name), f"{test_id}.json")
 
     def save_test(
         self,

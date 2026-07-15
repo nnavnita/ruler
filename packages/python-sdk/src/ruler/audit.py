@@ -11,9 +11,12 @@ from ruler.schemas import AuditRecord
 class AuditSink(Protocol):
     """Pluggable audit log. Implement for Postgres, S3, Kafka, etc."""
 
-    def append(self, record: AuditRecord) -> None: ...
-    def list(self, limit: int = 100, rule_name: str | None = None) -> list[AuditRecord]: ...
-    def get(self, record_id: str) -> AuditRecord | None: ...
+    def append(self, record: AuditRecord) -> None:
+        pass
+    def list(self, limit: int = 100, rule_name: str | None = None) -> list[AuditRecord]:
+        pass
+    def get(self, record_id: str) -> AuditRecord | None:
+        pass
 
 
 class InMemoryAuditSink:
