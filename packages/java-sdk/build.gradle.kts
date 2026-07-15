@@ -22,7 +22,7 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
 }
 
 tasks.test {

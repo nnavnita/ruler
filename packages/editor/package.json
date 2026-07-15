@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@gorules/jdm-editor": "^1.52.0",
-    "antd": "^5.20.0"
+    "antd": "^6.5.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
