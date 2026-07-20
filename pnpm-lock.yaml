@@ -39,19 +39,19 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))
+        version: 4.7.0(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))
       postcss:
         specifier: ^8.5.18
         version: 8.5.18
       tailwindcss:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.3
+        version: 4.3.3
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
       vite:
         specifier: ^8.1.4
-        version: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+        version: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
 
   apps/marketing:
     dependencies:
@@ -79,31 +79,31 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))
+        version: 4.7.0(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))
       postcss:
         specifier: ^8.5.18
         version: 8.5.18
       tailwindcss:
-        specifier: ^4.3.2
-        version: 4.3.2
+        specifier: ^4.3.3
+        version: 4.3.3
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
       vite:
         specifier: ^8.1.4
-        version: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+        version: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.4
-        version: 1.6.0(rollup@4.62.2)(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))
+        version: 1.6.0(rollup@4.62.2)(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.6.0(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))
+        version: 3.6.0(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))
 
   packages/editor:
     dependencies:
       '@gorules/jdm-editor':
         specifier: ^1.52.0
-        version: 1.52.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 1.52.0(@types/node@14.18.63)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       antd:
         specifier: ^6.5.1
         version: 6.5.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -128,7 +128,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))
+        version: 4.1.10(@types/node@14.18.63)(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))
 
 packages:
 
@@ -2581,6 +2581,9 @@ packages:
   tailwindcss@4.3.2:
     resolution: {integrity: sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA==}
 
+  tailwindcss@4.3.3:
+    resolution: {integrity: sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ==}
+
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
@@ -3218,7 +3221,7 @@ snapshots:
       lodash.isundefined: 3.0.1
       lodash.uniq: 4.5.0
 
-  '@gorules/jdm-editor@1.52.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@gorules/jdm-editor@1.52.0(@types/node@14.18.63)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       '@ant-design/icons': 6.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@codemirror/autocomplete': 6.20.3
@@ -3249,7 +3252,7 @@ snapshots:
       monaco-editor: 0.52.2
       re-resizable: 6.11.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
-      react-dnd: 16.0.1(@types/react@19.2.17)(react@19.2.7)
+      react-dnd: 16.0.1(@types/node@14.18.63)(@types/react@19.2.17)(react@19.2.7)
       react-dnd-html5-backend: 16.0.1
       react-dom: 19.2.7(react@19.2.7)
       react-intersection-observer: 9.16.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -4267,7 +4270,7 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@vitejs/plugin-react@4.7.0(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))':
+  '@vitejs/plugin-react@4.7.0(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
@@ -4275,7 +4278,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+      vite: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -4288,13 +4291,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.10(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))':
+  '@vitest/mocker@4.1.10(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))':
     dependencies:
       '@vitest/spy': 4.1.10
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+      vite: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
 
   '@vitest/pretty-format@4.1.10':
     dependencies:
@@ -5342,7 +5345,7 @@ snapshots:
     dependencies:
       dnd-core: 16.0.1
 
-  react-dnd@16.0.1(@types/react@19.2.17)(react@19.2.7):
+  react-dnd@16.0.1(@types/node@14.18.63)(@types/react@19.2.17)(react@19.2.7):
     dependencies:
       '@react-dnd/invariant': 4.0.2
       '@react-dnd/shallowequal': 4.0.2
@@ -5351,6 +5354,7 @@ snapshots:
       hoist-non-react-statics: 3.3.2
       react: 19.2.7
     optionalDependencies:
+      '@types/node': 14.18.63
       '@types/react': 19.2.17
 
   react-dom@19.2.7(react@19.2.7):
@@ -5544,6 +5548,8 @@ snapshots:
 
   tailwindcss@4.3.2: {}
 
+  tailwindcss@4.3.3: {}
+
   tapable@2.3.3: {}
 
   tar-stream@2.2.0:
@@ -5670,22 +5676,22 @@ snapshots:
 
   uuid@11.1.1: {}
 
-  vite-plugin-top-level-await@1.6.0(rollup@4.62.2)(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0)):
+  vite-plugin-top-level-await@1.6.0(rollup@4.62.2)(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)):
     dependencies:
       '@rollup/plugin-virtual': 3.0.2(rollup@4.62.2)
       '@swc/core': 1.15.43
       '@swc/wasm': 1.15.43
       uuid: 11.1.1
-      vite: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+      vite: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
 
-  vite-plugin-wasm@3.6.0(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0)):
+  vite-plugin-wasm@3.6.0(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)):
     dependencies:
-      vite: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+      vite: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
 
-  vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0):
+  vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.5
@@ -5693,14 +5699,15 @@ snapshots:
       rolldown: 1.1.5
       tinyglobby: 0.2.17
     optionalDependencies:
+      '@types/node': 14.18.63
       esbuild: 0.28.1
       fsevents: 2.3.3
       jiti: 2.7.0
 
-  vitest@4.1.10(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0)):
+  vitest@4.1.10(@types/node@14.18.63)(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)):
     dependencies:
       '@vitest/expect': 4.1.10
-      '@vitest/mocker': 4.1.10(vite@8.1.4(esbuild@0.28.1)(jiti@2.7.0))
+      '@vitest/mocker': 4.1.10(vite@8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0))
       '@vitest/pretty-format': 4.1.10
       '@vitest/runner': 4.1.10
       '@vitest/snapshot': 4.1.10
@@ -5717,8 +5724,10 @@ snapshots:
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vite: 8.1.4(esbuild@0.28.1)(jiti@2.7.0)
+      vite: 8.1.4(@types/node@14.18.63)(esbuild@0.28.1)(jiti@2.7.0)
       why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 14.18.63
     transitivePeerDependencies:
       - msw
 
